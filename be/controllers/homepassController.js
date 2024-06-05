@@ -23,58 +23,76 @@ class HomepassController {
       const filterValues = [];
 
       if (fullNamePic) {
-        filters.push("full_name_pic ILIKE $" + filterValues.length + 1);
+        filters.push(`full_name_pic ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${fullNamePic}%`);
       }
 
       if (submissionFrom) {
-        filters.push("submission_from ILIKE $" + filterValues.length + 1);
+        filters.push(`submission_from ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${submissionFrom}%`);
       }
 
       if (requestSource) {
-        filters.push("request_source ILIKE $" + filterValues.length + 1);
+        filters.push(`request_source ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${requestSource}%`);
       }
 
       if (customerCid) {
-        filters.push("customer_cid ILIKE $" + filterValues.length + 1);
+        filters.push(`customer_cid ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${customerCid}%`);
       }
 
       if (homepassId) {
-        filters.push("homepass_id ILIKE $" + filterValues.length + 1);
+        filters.push(`homepass_id ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${homepassId}%`);
       }
 
       if (network) {
-        filters.push("network ILIKE $" + filterValues.length + 1);
+        filters.push(`network ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${network}%`);
       }
 
       if (homeIdStatus) {
-        filters.push("home_id_status ILIKE $" + filterValues.length + 1);
+        filters.push(`home_id_status ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${homeIdStatus}%`);
       }
 
       if (hpmPic) {
-        filters.push("hpm_pic ILIKE $" + filterValues.length + 1);
+        filters.push(`hpm_pic ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${hpmPic}%`);
       }
 
       if (status) {
-        filters.push("status ILIKE $" + filterValues.length + 1);
+        filters.push(`status ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${status}%`);
       }
 
       const offset = (page - 1) * limit; // Calculate offset based on page and limit
 
-      const query = `SELECT * FROM homepass_request ${
-        filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""
-      } ORDER BY id DESC LIMIT $${filterValues.length + 1} OFFSET $${filterValues.length + 2}`;
-  
-      const result = await pool.query(query, [...filterValues, limit, offset]);
-      res.status(200).json(result.rows);
+      // Assemble query with placeholders
+      const query = `
+        SELECT * FROM homepass_request 
+        ${filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""}
+        ORDER BY id DESC 
+        LIMIT $${filterValues.length + 1} 
+        OFFSET $${filterValues.length + 2}
+      `;
+
+      const countQuery = `
+        SELECT COUNT(*) FROM homepass_request 
+        ${filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""}
+      `;
+
+      // Execute the queries
+      const [result, countResult] = await Promise.all([
+        pool.query(query, [...filterValues, limit, offset]),
+        pool.query(countQuery, filterValues)
+      ]);
+
+      const totalRecords = parseInt(countResult.rows[0].count, 10);
+      const totalPages = Math.ceil(totalRecords / limit);
+
+      res.status(200).json({ requests: result.rows, totalPages });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
