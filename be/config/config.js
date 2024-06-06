@@ -7,7 +7,7 @@ const pool = new Pool({
     password: 'Myrep123!',
     port: 5432,
   });
-
+1
   // const pool = new Pool({
   //   user: 'postgres',
   //   host: 'localhost',

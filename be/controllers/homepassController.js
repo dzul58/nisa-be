@@ -1,6 +1,7 @@
 const pool = require('../config/config')
 const jwt = require('jsonwebtoken');
 const md5 = require('md5');
+const UploadController = require('./uploadController');
 
 class HomepassController {
   static async getAllHomepassRequests(req, res) {
@@ -117,16 +118,104 @@ class HomepassController {
       }
     
 
+      // static async createHomepassRequest(req, res) {
+      //   const {
+      //     full_name_pic, submission_from, request_source, customer_cid,
+      //     current_address, destination_address, coordinate_point, house_photo,
+      //     request_purpose, email_address, hpm_check_result, homepass_id,
+      //     network, home_id_status, remarks, notes_recommendations, hpm_pic,
+      //     status, completion_date
+      //   } = req.body;
+    
+      //   try {
+      //     const result = await pool.query(
+      //       `INSERT INTO homepass_request (
+      //         full_name_pic, submission_from, request_source, customer_cid, current_address,
+      //         destination_address, coordinate_point, house_photo, request_purpose, email_address,
+      //         hpm_check_result, homepass_id, network, home_id_status, remarks, notes_recommendations,
+      //         hpm_pic, status, completion_date
+      //       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      //       RETURNING *`,
+      //       [
+      //         full_name_pic, submission_from, request_source, customer_cid, current_address,
+      //         destination_address, coordinate_point, house_photo, request_purpose, email_address,
+      //         hpm_check_result, homepass_id, network, home_id_status, remarks, notes_recommendations,
+      //         hpm_pic, status, completion_date
+      //       ]
+      //     );
+      //     res.status(201).json(result.rows[0]);
+      //   } catch (error) {
+      //     console.error(error);
+      //     res.status(500).json({ error: 'Internal Server Error' });
+      //   }
+      // }
+
+      // static async createHomepassRequest(req, res) {
+      //   const {
+      //     full_name_pic, submission_from, request_source, customer_cid,
+      //     current_address, destination_address, coordinate_point, house_photo,
+      //     request_purpose, email_address, hpm_check_result, homepass_id,
+      //     network, home_id_status, remarks, notes_recommendations, hpm_pic,
+      //     status, completion_date
+      //   } = req.body;
+    
+      //   try {
+      //     // Melakukan upload file terlebih dahulu
+      //     const fileUploadResponse = await UploadController.uploadFile(req, res);
+    
+      //     // Jika terjadi error saat upload file, kembalikan error tersebut
+      //     if (!fileUploadResponse.success) {
+      //       return res.status(fileUploadResponse.status).json(fileUploadResponse.error);
+      //     }
+    
+      //     // Menggunakan imageUrl dari response upload file
+      //     const house_photo = fileUploadResponse.imageUrl;
+    
+      //     const result = await pool.query(
+      //       `INSERT INTO homepass_request (
+      //         full_name_pic, submission_from, request_source, customer_cid, current_address,
+      //         destination_address, coordinate_point, house_photo, request_purpose, email_address,
+      //         hpm_check_result, homepass_id, network, home_id_status, remarks, notes_recommendations,
+      //         hpm_pic, status, completion_date
+      //       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      //       RETURNING *`,
+      //       [
+      //         full_name_pic, submission_from, request_source, customer_cid, current_address,
+      //         destination_address, coordinate_point, house_photo, request_purpose, email_address,
+      //         hpm_check_result, homepass_id, network, home_id_status, remarks, notes_recommendations,
+      //         hpm_pic, status, completion_date
+      //       ]
+      //     );
+      //     res.status(201).json(result.rows[0]);
+      //   } catch (error) {
+      //     console.error(error);
+      //     res.status(500).json({ error: 'Internal Server Error' });
+      //   }
+      // }
+
       static async createHomepassRequest(req, res) {
         const {
-          full_name_pic, submission_from, request_source, customer_cid,
-          current_address, destination_address, coordinate_point, house_photo,
-          request_purpose, email_address, hpm_check_result, homepass_id,
-          network, home_id_status, remarks, notes_recommendations, hpm_pic,
-          status, completion_date
+          uploadResult,
+          current_address,
+          destination_address,
+          coordinate_point,
+          request_purpose,
+          email_address,
+          hpm_check_result,
+          network,
+          home_id_status,
+          remarks,
+          notes_recommendations,
+          hpm_pic,
+          status,
+          completion_date
         } = req.body;
-    
+      
         try {
+          if (!uploadResult || !uploadResult.housePhotoUrl) {
+            return res.status(400).json({ error: 'House photo is required' });
+          }
+      
           const result = await pool.query(
             `INSERT INTO homepass_request (
               full_name_pic, submission_from, request_source, customer_cid, current_address,
@@ -136,9 +225,9 @@ class HomepassController {
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
             RETURNING *`,
             [
-              full_name_pic, submission_from, request_source, customer_cid, current_address,
-              destination_address, coordinate_point, house_photo, request_purpose, email_address,
-              hpm_check_result, homepass_id, network, home_id_status, remarks, notes_recommendations,
+              uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, current_address,
+              destination_address, coordinate_point, uploadResult.housePhotoUrl, request_purpose, email_address,
+              hpm_check_result, uploadResult.homepassId, network, home_id_status, remarks, notes_recommendations,
               hpm_pic, status, completion_date
             ]
           );

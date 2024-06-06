@@ -31,7 +31,7 @@ class UploadController {
 
       sftp.end();
 
-      const imageUrl = `http://192.168.202.166/upload_images/${uniqueFilename}`;
+      const imageUrl = `http://192.168.202.166:8080/${uniqueFilename}`;
       res.send({ message: 'File berhasil diunggah', imageUrl });
     } catch (err) {
       console.error('Error uploading file:', err);
