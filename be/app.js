@@ -18,7 +18,7 @@ app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
 app.post('/api/upload', upload.single('file'), UploadController.uploadFile); // Using upload.single('file') as callback function
 app.get('/api/homepass/:id', HomepassController.getHomepassRequestById);
-app.put('/api/homepass/:id', HomepassController.updateHomepassRequest);
+app.put('/api/homepass/:id', upload.single('file'), HomepassController.updateHomepassRequest);
 
 app.listen(port, () => {
   console.log(`NISA app listening on port ${port}`);
