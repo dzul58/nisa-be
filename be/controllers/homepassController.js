@@ -17,7 +17,7 @@ class HomepassController {
         hpmPic,
         status,
         page = 1, // default page is 1
-        limit = 10 // default limit is 10
+        limit = 20 // default limit is 10
       } = req.query;
 
       const filters = [];
