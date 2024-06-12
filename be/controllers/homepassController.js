@@ -1,7 +1,6 @@
 const pool = require('../config/config')
-const jwt = require('jsonwebtoken');
-const md5 = require('md5');
-// const UploadController = require('./uploadController');
+const { compareTextWithHash } = require("../helpers/md5");
+const { signToken } = require("../helpers/jwt");
 
 class HomepassController {
   static async getAllHomepassRequests(req, res) {
@@ -228,44 +227,38 @@ class HomepassController {
       }
 
 
-      static async login(req, res) {
-        const { username, password } = req.body;
-
+      static async login(req, res, next) {
         try {
-            const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-            if (result.rows.length === 0) {
-                return res.status(401).json({ error: 'Invalid credentials' });
-            }
-
-            const user = result.rows[0];
-            const hashedPassword = md5(password);
-            if (user.password !== hashedPassword) {
-                return res.status(401).json({ error: 'Invalid credentials' });
-            }
-
-            const token = jwt.sign({ id: user.id }, 'your_jwt_secret', { expiresIn: '1h' });
-            const hashedToken = md5(token);
-
-            res.status(200).json({ auth: true, token: hashedToken });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    }
+          const { email, password } = req.body;
     
-
-      static verifyToken(req, res, next) {
-        const token = req.headers['x-access-token'];
-        if (!token) return res.status(403).json({ auth: false, message: 'No token provided.' });
-
-        const decodedToken = md5(token);
-        jwt.verify(decodedToken, 'your_jwt_secret', function(err, decoded) {
-            if (err) return res.status(500).json({ auth: false, message: 'Failed to authenticate token.' });
-
-            req.userId = decoded.id;
-            next();
-        });
-    }
+          if (!email) {
+            throw { name: "EmailError" };
+          }
+    
+          if (!password) {
+            throw { name: "PasswordError" };
+          }
+    
+          const result = await pool.query('SELECT * FROM user_test WHERE email = $1', [email]);
+          const user = result.rows[0];
+    
+          if (!user) {
+            throw { name: "LoginError" };
+          }
+    
+          const isValidPassword = compareTextWithHash(password, user.password);
+    
+          if (!isValidPassword) {
+            throw { name: "LoginError" };
+          }
+    
+          const accessToken = signToken({ id: user.id, email: user.email });
+    
+          res.json({ access_token: accessToken });
+        } catch (error) {
+          next(error);
+        }
+      }
 
 }
 

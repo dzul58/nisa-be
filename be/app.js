@@ -14,6 +14,7 @@ app.use(express.json());
 // Serve static files from /home/web/upload_images
 app.use('/upload_images', express.static('/home/web/upload_images'));
 
+app.post('/login', HomepassController.login)
 app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
 app.post('/api/upload', upload.single('file'), UploadController.uploadFile); // Using upload.single('file') as callback function
