@@ -232,24 +232,25 @@ class HomepassController {
           const { email, password } = req.body;
     
           if (!email) {
-            throw { name: "EmailError" };
+            return res.status(400).json({ error: "Email is required" });
           }
     
           if (!password) {
-            throw { name: "PasswordError" };
+            return res.status(400).json({ error: "Password is required" });
           }
     
           const result = await pool.query('SELECT * FROM user_test WHERE email = $1', [email]);
           const user = result.rows[0];
+          console.log(user, "ini user");
     
           if (!user) {
-            throw { name: "LoginError" };
+            return res.status(401).json({ error: "Invalid email or password" });
           }
     
           const isValidPassword = compareTextWithHash(password, user.password);
     
           if (!isValidPassword) {
-            throw { name: "LoginError" };
+            return res.status(401).json({ error: "Invalid email or password" });
           }
     
           const accessToken = signToken({ id: user.id, email: user.email });
