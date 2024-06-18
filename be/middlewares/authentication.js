@@ -4,7 +4,7 @@ const pool = require('../config/config')
 const authentication = async (req, res, next) => {
   try {
     const { authorization } = req.headers;
-    // console.log(authorization, "authorization");
+    console.log(authorization, "authorization");
     const accessToken = authorization.split(" ")[1];
     // console.log(accessToken, "accessToken");
     const jwtPayload = verifyToken(accessToken);
