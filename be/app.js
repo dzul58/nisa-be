@@ -8,6 +8,7 @@ const cors = require('cors');
 const path = require('path');
 const authentication = require('./middlewares/authentication');
 const authorizationAdmin = require('./middlewares/authorizationAdmin');
+const LoginController = require('./controllers/loginController');
 
 app.use(cors());
 app.use(express.urlencoded({ extended: false }));
@@ -16,10 +17,10 @@ app.use(express.json());
 // Serve static files from /home/web/upload_images
 app.use('/upload_images', express.static('/home/web/upload_images'));
 
-app.post('/login', HomepassController.login)
+app.post('/login', LoginController.login)
 app.use(authentication);
 app.get('/api/homepass',HomepassController.getAllHomepassRequests);
-app.post('/api/homepass', authorizationAdmin, HomepassController.createHomepassRequest);
+app.post('/api/homepass', HomepassController.createHomepassRequest);
 app.post('/api/upload', upload.single('file'), UploadController.uploadFile); // Using upload.single('file') as callback function
 app.get('/api/homepass/:id', HomepassController.getHomepassRequestById);
 app.put('/api/homepass/:id', upload.single('file'), HomepassController.updateHomepassRequest);

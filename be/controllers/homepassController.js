@@ -1,12 +1,11 @@
-const pool = require('../config/config')
-const { compareTextWithHash } = require("../helpers/md5");
-const { signToken } = require("../helpers/jwt");
+const poolNisa = require('../config/configNisa')
+
 
 class HomepassController {
   static async getAllHomepassRequests(req, res) {
     try {
       const {
-        fullNamePic,
+        request_purpose,
         submissionFrom,
         requestSource,
         customerCid,
@@ -16,15 +15,15 @@ class HomepassController {
         hpmPic,
         status,
         page = 1, // default page is 1
-        limit = 20 // default limit is 10
+        limit = 12 // default limit is 10
       } = req.query;
 
       const filters = [];
       const filterValues = [];
 
-      if (fullNamePic) {
+      if (request_purpose) {
         filters.push(`full_name_pic ILIKE $${filterValues.length + 1}`);
-        filterValues.push(`%${fullNamePic}%`);
+        filterValues.push(`%${request_purpose}%`);
       }
 
       if (submissionFrom) {
@@ -71,7 +70,7 @@ class HomepassController {
 
       // Assemble query with placeholders
       const query = `
-        SELECT * FROM homepass_request 
+        SELECT * FROM homepass_moving_address_request 
         ${filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""}
         ORDER BY id DESC 
         LIMIT $${filterValues.length + 1} 
@@ -79,14 +78,14 @@ class HomepassController {
       `;
 
       const countQuery = `
-        SELECT COUNT(*) FROM homepass_request 
+        SELECT COUNT(*) FROM homepass_moving_address_request 
         ${filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""}
       `;
 
       // Execute the queries
       const [result, countResult] = await Promise.all([
-        pool.query(query, [...filterValues, limit, offset]),
-        pool.query(countQuery, filterValues)
+        poolNisa.query(query, [...filterValues, limit, offset]),
+        poolNisa.query(countQuery, filterValues)
       ]);
 
       const totalRecords = parseInt(countResult.rows[0].count, 10);
@@ -104,7 +103,7 @@ class HomepassController {
         const { id } = req.params;
     
         try {
-          const result = await pool.query('SELECT * FROM homepass_request WHERE id = $1', [id]);
+          const result = await poolNisa.query('SELECT * FROM homepass_moving_address_request WHERE id = $1', [id]);
           if (result.rows.length === 0) {
             res.status(404).json({ error: 'Record not found' });
           } else {
@@ -135,8 +134,8 @@ class HomepassController {
         } = req.body;
     
         try {
-          const result = await pool.query(
-            `INSERT INTO homepass_request (
+          const result = await poolNisa.query(
+            `INSERT INTO homepass_moving_address_request (
               full_name_pic, submission_from, request_source, customer_cid, current_address,
               destination_address, coordinate_point, house_photo, request_purpose, email_address,
               hpm_check_result, homepass_id, network, home_id_status, remarks, notes_recommendations,
@@ -170,8 +169,8 @@ class HomepassController {
       
       //   try {
       
-      //     const result = await pool.query(
-      //       `INSERT INTO homepass_request (
+      //     const result = await poolNisa.query(
+      //       `INSERT INTO homepass_moving_address_request (
       //         full_name_pic, submission_from, request_source, customer_cid, current_address,
       //         destination_address, coordinate_point, house_photo, request_purpose, email_address,
       //       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -211,8 +210,8 @@ class HomepassController {
         
     
       //   try {
-      //     const result = await pool.query(
-      //       `UPDATE homepass_request SET
+      //     const result = await poolNisa.query(
+      //       `UPDATE homepass_moving_address_request SET
       //         full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
       //         current_address = $5, destination_address = $6, coordinate_point = $7, house_photo = $8,
       //         request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
@@ -263,8 +262,8 @@ class HomepassController {
         
     
         try {
-          const result = await pool.query(
-            `UPDATE homepass_request SET
+          const result = await poolNisa.query(
+            `UPDATE homepass_moving_address_request SET
               full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
               current_address = $5, destination_address = $6, coordinate_point = $7, house_photo = $8,
               request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
@@ -295,7 +294,7 @@ class HomepassController {
         const { id } = req.params;
     
         try {
-          const result = await pool.query('DELETE FROM homepass_request WHERE id = $1 RETURNING *', [id]);
+          const result = await poolNisa.query('DELETE FROM homepass_moving_address_request WHERE id = $1 RETURNING *', [id]);
           if (result.rows.length === 0) {
             res.status(404).json({ error: 'Record not found' });
           } else {
@@ -306,42 +305,6 @@ class HomepassController {
           res.status(500).json({ error: 'Internal Server Error' });
         }
       }
-
-
-      static async login(req, res, next) {
-        try {
-          const { email, password } = req.body;
-    
-          if (!email) {
-            return res.status(400).json({ error: "Email is required" });
-          }
-    
-          if (!password) {
-            return res.status(400).json({ error: "Password is required" });
-          }
-    
-          const result = await pool.query('SELECT * FROM user_test WHERE email = $1', [email]);
-          const user = result.rows[0];
-          console.log(user, "ini user");
-    
-          if (!user) {
-            return res.status(401).json({ error: "Invalid email or password" });
-          }
-    
-          const isValidPassword = compareTextWithHash(password, user.password);
-    
-          if (!isValidPassword) {
-            return res.status(401).json({ error: "Invalid email or password" });
-          }
-    
-          const accessToken = signToken({ id: user.id, email: user.email });
-    
-          res.json({ access_token: accessToken });
-        } catch (error) {
-          next(error);
-        }
-      }
-
 }
 
 module.exports = HomepassController
