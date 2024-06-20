@@ -17,7 +17,6 @@ class LoginController {
     
           const result = await poolNisa.query('SELECT * FROM mst_user WHERE muse_email = $1', [email]);
           const user = result.rows[0];
-          console.log(user.muse_email, "ini user");
     
           if (!user) {
             return res.status(401).json({ error: "Invalid email or password" });
@@ -29,7 +28,7 @@ class LoginController {
             return res.status(401).json({ error: "Invalid email or password" });
           }
  
-          const payload = { email: user.muse_email, otherData: 'someValue' };
+          const payload = { email: user.muse_email, name: user.muse_name };
           const accessToken = signToken(payload);
     
           res.json({ access_token: accessToken });
