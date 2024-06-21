@@ -10,14 +10,21 @@ const authentication = require('./middlewares/authentication');
 const authorizationAdmin = require('./middlewares/authorizationAdmin');
 const LoginController = require('./controllers/loginController');
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://192.168.202.166:5173', // Sesuaikan dengan URL frontend 
+  credentials: true
+}));
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // Serve static files from /home/web/upload_images
 app.use('/upload_images', express.static('/home/web/upload_images'));
 
-app.get('/auto-login', LoginController.autoLogin);
+app.get('/auto-login', (req, res, next) => {
+  console.log('Auto-login request received:', req.query);
+  LoginController.autoLogin(req, res, next);
+});
 app.post('/login', LoginController.login)
 app.use(authentication);
 app.get('/api/homepass',HomepassController.getAllHomepassRequests);
