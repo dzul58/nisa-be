@@ -11,28 +11,27 @@ const authorizationAdmin = require('./middlewares/authorizationAdmin');
 const LoginController = require('./controllers/loginController');
 
 app.use(cors({
-  origin: 'http://192.168.202.166:5173', // Sesuaikan dengan URL frontend 
+  origin: 'http://192.168.202.166:5173',
   credentials: true
 }));
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Serve static files from /home/web/upload_images
 app.use('/upload_images', express.static('/home/web/upload_images'));
 
-app.get('/auto-login', (req, res, next) => {
-  console.log('Auto-login request received:', req.query);
-  LoginController.autoLogin(req, res, next);
-});
-app.post('/login', LoginController.login)
+app.get('/auto-login', LoginController.autoLogin);
+app.post('/login', LoginController.login);
+
 app.use(authentication);
-app.get('/api/homepass',HomepassController.getAllHomepassRequests);
+
+app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
-app.post('/api/upload', upload.single('file'), UploadController.uploadFile); // Using upload.single('file') as callback function
+app.post('/api/upload', upload.single('file'), UploadController.uploadFile);
 app.get('/api/homepass/:id', HomepassController.getHomepassRequestById);
 app.put('/api/homepass/:id', upload.single('file'), HomepassController.updateHomepassRequest);
 
 app.listen(port, () => {
   console.log(`NISA app listening on port ${port}`);
 });
+
