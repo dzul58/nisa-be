@@ -52,9 +52,8 @@ class LoginController {
             return res.status(401).json({ error: "Invalid username or password" });
           }
       
-          const isValidPassword = compareTextWithHash(password, user.muse_password);
-      
-          if (!isValidPassword) {
+          // Direct password comparison
+          if (password !== user.muse_password) {
             return res.status(401).json({ error: "Invalid username or password" });
           }
       
