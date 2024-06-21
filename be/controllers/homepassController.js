@@ -150,7 +150,6 @@ class HomepassController {
               hpm_pic, status, completion_date
             ]
           );
-          console.log(name, "ini name...");
           res.status(201).json(result.rows[0]);
         } catch (error) {
           console.error(error);
