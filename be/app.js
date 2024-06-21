@@ -17,6 +17,7 @@ app.use(express.json());
 // Serve static files from /home/web/upload_images
 app.use('/upload_images', express.static('/home/web/upload_images'));
 
+app.get('/auto-login', LoginController.autoLogin);
 app.post('/login', LoginController.login)
 app.use(authentication);
 app.get('/api/homepass',HomepassController.getAllHomepassRequests);
@@ -28,5 +29,3 @@ app.put('/api/homepass/:id', upload.single('file'), HomepassController.updateHom
 app.listen(port, () => {
   console.log(`NISA app listening on port ${port}`);
 });
-
-// tes jenkins
