@@ -5,6 +5,8 @@ const authentication = async (req, res, next) => {
   try {
     const { authorization } = req.headers;
 
+    console.log( authorization, "authorization");
+
     if (!authorization) {
       throw new Error('Authorization header is missing');
     }

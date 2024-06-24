@@ -32,17 +32,22 @@ class LoginController {
       const { username, password } = req.query;
 
       if (!username || !password) {
-        return res.status(400).json({ error: "Username and password are required" });
+        return res.status(400).json({ error: "Username dan password diperlukan" });
       }
 
+      // Decode password jika masih mengandung "&amp;"
+      const decodedPassword = password.replace(/&amp;/g, '&');
+
+      console.log(username, decodedPassword, "ini password");
+      
       const result = await poolNisa.query('SELECT * FROM mst_user WHERE muse_code = $1', [username]);
       const user = result.rows[0];
 
-      if (!user || password !== user.muse_password) {
-        return res.status(401).json({ error: "Invalid username or password" });
+      if (!user || decodedPassword !== user.muse_password) {
+        return res.status(401).json({ error: "Username atau password tidak valid" });
       }
 
-      const payload = { email: user.muse_email};
+      const payload = { email: user.muse_email };
       const accessToken = signToken(payload);
 
       res.json({ access_token: accessToken });
