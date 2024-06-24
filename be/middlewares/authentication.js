@@ -29,7 +29,7 @@ const authentication = async (req, res, next) => {
       username: user.muse_code
     };
 
-    console.log(req.userAccount, "ini isinya");
+    // console.log(req.userAccount, "ini isinya");
     next();
   } catch (error) {
     console.error('Authentication error:', error.message);
