@@ -304,7 +304,6 @@ class HomepassController {
           home_id_status,
           remarks,
           notes_recommendations,
-          // hpm_pic,
           status,
           completion_date
         } = req.body;
