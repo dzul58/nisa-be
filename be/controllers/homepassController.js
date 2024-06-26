@@ -310,7 +310,6 @@ class HomepassController {
         } = req.body;
     
         try {
-                  // console.log(name, "ini nama");
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
               full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
