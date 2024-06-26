@@ -28,10 +28,14 @@ class AuthorizationController{
             return res.status(403).json({ message: 'Access forbidden' });
           }
       
-          const userData = result.rows;
+          const userData = result.rows[0];
       
-          // Mengirim respons langsung dengan data user
-          res.status(200).json(userData);
+          res.status(200).json({
+            name: userData.muse_name,
+            username: userData.muse_code,
+            email: userData.muse_email,
+            role: userData.mupf_name
+          });
       
         } catch (error) {
           console.error('Error in authorizationAccess:', error);
@@ -66,9 +70,14 @@ class AuthorizationController{
             return res.status(403).json({ message: 'Access forbidden' });
           }
       
-          const userData = result.rows;
-          
-          res.status(200).json(userData);
+          const userData = result.rows[0];
+
+          res.status(200).json({
+            name: userData.muse_name,
+            username: userData.muse_code,
+            email: userData.muse_email,
+            role: userData.mupf_name
+          });
       
         } catch (error) {
           console.error('Error in authorizationAccess:', error);

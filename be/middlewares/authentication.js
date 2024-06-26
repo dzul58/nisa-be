@@ -45,7 +45,7 @@ const authentication = async (req, res, next) => {
       role: user.mupf_name 
     };
 
-    console.log(req.userAccount, "ini isinya");
+    // console.log(req.userAccount, "ini isinya");
 
     next();
   } catch (error) {

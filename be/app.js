@@ -7,7 +7,6 @@ const port = 8000;
 const cors = require('cors');
 const path = require('path');
 const authentication = require('./middlewares/authentication');
-const authorizationAdmin = require('./middlewares/authorizationAdmin');
 const LoginController = require('./controllers/loginController');
 const AuthorizationController = require('./controllers/authorizationController');
 
@@ -32,7 +31,8 @@ app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
 app.post('/api/upload', upload.single('file'), UploadController.uploadFile);
 app.get('/api/homepass/:id', HomepassController.getHomepassRequestById);
-app.put('/api/homepass/:id', upload.single('file'), HomepassController.updateHomepassRequest);
+app.put('/api/update-homepass/:id', HomepassController.updateHomepassRequest);
+app.put('/api/edit-homepass/:id', upload.single('file'), HomepassController.editHomepassRequest);
 
 app.listen(port, () => {
   console.log(`NISA app listening on port ${port}`);
