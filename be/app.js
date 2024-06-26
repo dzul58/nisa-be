@@ -9,6 +9,7 @@ const path = require('path');
 const authentication = require('./middlewares/authentication');
 const authorizationAdmin = require('./middlewares/authorizationAdmin');
 const LoginController = require('./controllers/loginController');
+const AuthorizationController = require('./controllers/authorizationController');
 
 app.use(cors({
   origin: ['http://192.168.202.166:5173', 'http://localhost:5173'],
@@ -25,6 +26,8 @@ app.post('/login', LoginController.login);
 
 app.use(authentication);
 
+app.get('/api/authorization-cs', AuthorizationController.authorizationCs);
+app.get('/api/authorization-hpm', AuthorizationController.authorizationHpm);
 app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
 app.post('/api/upload', upload.single('file'), UploadController.uploadFile);

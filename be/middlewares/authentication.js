@@ -16,7 +16,22 @@ const authentication = async (req, res, next) => {
     }
 
     const jwtPayload = verifyToken(accessToken);
-    const result = await poolNisa.query('SELECT * FROM mst_user WHERE muse_email = $1', [jwtPayload.email]);
+    const result = await poolNisa.query(
+      `SELECT
+        u.muse_name,
+        u.muse_code,
+        u.muse_email,
+        p.mupf_name
+      FROM
+        mst_user u
+      JOIN
+        mst_user_group g ON u.muse_code = g.mugr_muse_code
+      JOIN
+        mst_user_profile p ON g.mugr_mupf_code = p.mupf_code
+      WHERE
+        u.muse_email = $1`, 
+      [jwtPayload.email]
+    );
     const user = result.rows[0];
 
     if (!user) {
@@ -26,10 +41,12 @@ const authentication = async (req, res, next) => {
     req.userAccount = {
       email: user.muse_email,
       name: user.muse_name,
-      username: user.muse_code
+      username: user.muse_code,
+      role: user.mupf_name 
     };
 
-    // console.log(req.userAccount, "ini isinya");
+    console.log(req.userAccount, "ini isinya");
+
     next();
   } catch (error) {
     console.error('Authentication error:', error.message);
