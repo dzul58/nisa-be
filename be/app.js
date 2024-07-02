@@ -11,7 +11,7 @@ const LoginController = require('./controllers/loginController');
 const AuthorizationController = require('./controllers/authorizationController');
 
 app.use(cors({
-  origin: ['http://192.168.202.166:5173', 'http://localhost:5173'],
+  origin: ['https://moving-address.oss.myrepublic.co.id'],
   credentials: true
 }));
 
