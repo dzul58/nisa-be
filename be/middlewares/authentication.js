@@ -43,7 +43,7 @@ const authentication = async (req, res, next) => {
 
         // Manipulate mupf_name as requested
     // console.log(user.muse_name, "ini muse_name");
-    const formatName = user.muse_name
+    const formatName = user.muse_code
       .split('.') // Split by dot
       .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
       .join(' '); // Join with space
