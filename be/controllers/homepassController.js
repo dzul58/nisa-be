@@ -116,13 +116,12 @@ class HomepassController {
       }
     
       static async createHomepassRequest(req, res) {
-        const {name} = req.userAccount
+        const {name, email_address} = req.userAccount
         const {
           current_address,
           destination_address,
           coordinate_point,
           request_purpose,
-          email_address,
           hpm_check_result,
           network,
           home_id_status,

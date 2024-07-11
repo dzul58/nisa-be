@@ -18,7 +18,7 @@ class AuthorizationController{
             JOIN
               mst_user_profile p ON g.mugr_mupf_code = p.mupf_code
             WHERE
-              p.mupf_name = 'Administrator' AND
+              p.mupf_name = 'Customer Service' AND
               u.muse_email = $1
           `;
       
