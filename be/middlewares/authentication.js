@@ -41,9 +41,17 @@ const authentication = async (req, res, next) => {
       throw new Error('User not found');
     }
 
+        // Manipulate mupf_name as requested
+    // console.log(user.muse_name, "ini muse_name");
+    const formatName = user.muse_name
+      .split('.') // Split by dot
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
+      .join(' '); // Join with space
+
+
     req.userAccount = {
       email: user.muse_email,
-      name: user.muse_name,
+      name: formatName,
       username: user.muse_code,
       role: user.mupf_name
     };
