@@ -21,7 +21,10 @@ const authentication = async (req, res, next) => {
         u.muse_name,
         u.muse_code,
         u.muse_email,
-        p.mupf_name
+        CASE
+          WHEN p.mupf_name IN ('Customer Service', 'HPM') THEN p.mupf_name
+          ELSE 'View Only'
+        END AS mupf_name
       FROM
         mst_user u
       JOIN
@@ -29,7 +32,7 @@ const authentication = async (req, res, next) => {
       JOIN
         mst_user_profile p ON g.mugr_mupf_code = p.mupf_code
       WHERE
-        u.muse_email = $1`, 
+        u.muse_email = $1`,
       [jwtPayload.email]
     );
     const user = result.rows[0];
@@ -42,7 +45,7 @@ const authentication = async (req, res, next) => {
       email: user.muse_email,
       name: user.muse_name,
       username: user.muse_code,
-      role: user.mupf_name 
+      role: user.mupf_name
     };
 
     // console.log(req.userAccount, "ini isinya");
