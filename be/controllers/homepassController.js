@@ -116,7 +116,7 @@ class HomepassController {
       }
     
       static async createHomepassRequest(req, res) {
-        const {name, email_address} = req.userAccount
+        const {name, email} = req.userAccount
         const {
           current_address,
           destination_address,
@@ -144,7 +144,7 @@ class HomepassController {
             RETURNING *`,
             [
               name, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, current_address,
-              destination_address, coordinate_point, uploadResult.housePhotoUrl, request_purpose, email_address,
+              destination_address, coordinate_point, uploadResult.housePhotoUrl, request_purpose, email,
               hpm_check_result, uploadResult.homepassId, network, home_id_status, remarks, notes_recommendations,
               hpm_pic, status, completion_date
             ]
