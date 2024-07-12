@@ -15,7 +15,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Initialize Multer middleware with file validation  
+// Initialize Multer middleware with file validation
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
