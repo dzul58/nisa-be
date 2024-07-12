@@ -29,7 +29,15 @@ app.get('/api/authorization-cs', AuthorizationController.authorizationCs);
 app.get('/api/authorization-hpm', AuthorizationController.authorizationHpm);
 app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
+
+// New image upload endpoints
+app.post('/api/upload-photo-front-of-house', upload.single('photo_front_of_house'), UploadController.uploadImageFrontOfHouse);
+app.post('/api/upload-photo-left-of-house', upload.single('photo_left_of_house'), UploadController.uploadImageLeftOfHouse);
+app.post('/api/upload-photo-right-of-house', upload.single('photo_right_of_house'), UploadController.uploadImageRightOfHouse);
+app.post('/api/upload-photo-old-fat', upload.single('photo_old_fat'), UploadController.uploadImageOldFat);
+app.post('/api/upload-photo-new-fat', upload.single('photo_new_fat'), UploadController.uploadImageNewFat);
 app.post('/api/upload', upload.single('file'), UploadController.uploadFile);
+
 app.get('/api/homepass/:id', HomepassController.getHomepassRequestById);
 app.put('/api/update-homepass/:id', HomepassController.updateHomepassRequest);
 app.put('/api/edit-homepass/:id', upload.single('file'), HomepassController.editHomepassRequest);
