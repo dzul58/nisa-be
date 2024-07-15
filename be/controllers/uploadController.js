@@ -88,6 +88,7 @@ class UploadController {
 
       const imageUrl = `http://192.168.202.166:8080/${uniqueFilename}`;
       
+      // Adjust the imageUrl name based on the image type
       // Menyesuaikan nama imageUrl berdasarkan jenis gambar
       let responseKey;
       switch (imageType) {

@@ -116,7 +116,7 @@ class HomepassController {
       }
     
       static async createHomepassRequest(req, res) {
-        const {name, email} = req.userAccount
+        const { name, email } = req.userAccount
         const {
           current_address,
           destination_address,
@@ -130,23 +130,30 @@ class HomepassController {
           hpm_pic,
           status,
           completion_date,
-          uploadResult
+          uploadResult,
+          imageUrlFrontOfHouse,
+          imageUrlLeftOfHouse,
+          imageUrlRightOfHouse,
+          imageUrlOldFat,
+          imageUrlNewFat
         } = req.body;
-    
+      
         try {
           const result = await poolNisa.query(
             `INSERT INTO homepass_moving_address_request (
               full_name_pic, submission_from, request_source, customer_cid, current_address,
               destination_address, coordinate_point, house_photo, request_purpose, email_address,
               hpm_check_result, homepass_id, network, home_id_status, remarks, notes_recommendations,
-              hpm_pic, status, completion_date
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+              hpm_pic, status, completion_date, photo_front_of_house, photo_left_of_house, 
+              photo_right_of_house, photo_old_fat, photo_new_fat
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
             RETURNING *`,
             [
               name, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, current_address,
               destination_address, coordinate_point, uploadResult.housePhotoUrl, request_purpose, email,
               hpm_check_result, uploadResult.homepassId, network, home_id_status, remarks, notes_recommendations,
-              hpm_pic, status, completion_date
+              hpm_pic, status, completion_date, imageUrlFrontOfHouse, imageUrlLeftOfHouse, 
+              imageUrlRightOfHouse, imageUrlOldFat, imageUrlNewFat
             ]
           );
           res.status(201).json(result.rows[0]);
