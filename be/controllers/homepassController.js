@@ -127,7 +127,6 @@ class HomepassController {
           home_id_status,
           remarks,
           notes_recommendations,
-          hpm_pic,
           status,
           completion_date,
           uploadResult,
@@ -142,18 +141,35 @@ class HomepassController {
           const result = await poolNisa.query(
             `INSERT INTO homepass_moving_address_request (
               full_name_pic, submission_from, request_source, customer_cid, current_address,
-              destination_address, coordinate_point, house_photo, request_purpose, email_address,
-              hpm_check_result, homepass_id, network, home_id_status, remarks, notes_recommendations,
-              hpm_pic, status, completion_date, photo_front_of_house, photo_left_of_house, 
-              photo_right_of_house, photo_old_fat, photo_new_fat
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+              destination_address, coordinate_point, request_purpose, email_address,
+              hpm_check_result, network, home_id_status, remarks, notes_recommendations,
+              hpm_pic, status, completion_date, photo_front_of_house_url, photo_left_of_home_url, 
+              photo_right_of_home_url, photo_old_fat_url, photo_new_fat_url
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
             RETURNING *`,
             [
-              name, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, current_address,
-              destination_address, coordinate_point, uploadResult.housePhotoUrl, request_purpose, email,
-              hpm_check_result, uploadResult.homepassId, network, home_id_status, remarks, notes_recommendations,
-              hpm_pic, status, completion_date, imageUrlFrontOfHouse, imageUrlLeftOfHouse, 
-              imageUrlRightOfHouse, imageUrlOldFat, imageUrlNewFat
+              name, 
+              uploadResult.submissionFrom, 
+              uploadResult.requestSource, 
+              uploadResult.customerCid, 
+              current_address,
+              destination_address, 
+              coordinate_point, 
+              request_purpose, 
+              email,
+              hpm_check_result, 
+              network, 
+              home_id_status, 
+              remarks, 
+              notes_recommendations,
+              name, // hpm_pic
+              status, 
+              completion_date, 
+              imageUrlFrontOfHouse, 
+              imageUrlLeftOfHouse, 
+              imageUrlRightOfHouse, 
+              imageUrlOldFat, 
+              imageUrlNewFat
             ]
           );
           res.status(201).json(result.rows[0]);
@@ -162,7 +178,7 @@ class HomepassController {
           res.status(500).json({ error: 'Internal Server Error' });
         }
       }
-
+      
       static async editHomepassRequest(req, res) {
         const { id } = req.params;
         const {
@@ -179,11 +195,14 @@ class HomepassController {
           notes_recommendations,
           hpm_pic,
           status,
-          completion_date
+          completion_date,
+          imageUrlFrontOfHouse,
+          imageUrlLeftOfHouse,
+          imageUrlRightOfHouse,
+          imageUrlOldFat,
+          imageUrlNewFat
         } = req.body;
-
-        
-    
+      
         try {
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
@@ -191,14 +210,16 @@ class HomepassController {
               current_address = $5, destination_address = $6, coordinate_point = $7, house_photo = $8,
               request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
               network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
-              hpm_pic = $17, status = $18, completion_date = $19
-            WHERE id = $20
+              hpm_pic = $17, status = $18, completion_date = $19, photo_front_of_house_url = $20,
+              photo_left_of_home_url = $21, photo_right_of_home_url = $22, photo_old_fat_url = $23, photo_new_fat_url = $24
+            WHERE id = $25
             RETURNING *`,
             [
               uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, current_address,
               destination_address, coordinate_point, uploadResult.housePhotoUrl, request_purpose, email_address,
               hpm_check_result, uploadResult.homepassId, network, home_id_status, remarks, notes_recommendations,
-              hpm_pic, status, completion_date, id
+              hpm_pic, status, completion_date, imageUrlFrontOfHouse, imageUrlLeftOfHouse, 
+              imageUrlRightOfHouse, imageUrlOldFat, imageUrlNewFat, id
             ]
           );
           if (result.rows.length === 0) {
