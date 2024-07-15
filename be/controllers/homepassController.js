@@ -127,6 +127,7 @@ class HomepassController {
           home_id_status,
           remarks,
           notes_recommendations,
+          hpm_pic,
           status,
           completion_date,
           uploadResult,
@@ -162,7 +163,7 @@ class HomepassController {
               home_id_status, 
               remarks, 
               notes_recommendations,
-              name, // hpm_pic
+              hpm_pic,
               status, 
               completion_date, 
               imageUrlFrontOfHouse, 
