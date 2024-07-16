@@ -205,29 +205,45 @@ class HomepassController {
         } = req.body;
       
         try {
+          // Pertama, ambil data yang ada
+          const existingData = await poolNisa.query('SELECT * FROM homepass_moving_address_request WHERE id = $1', [id]);
+          
+          if (existingData.rows.length === 0) {
+            return res.status(404).json({ error: 'Record not found' });
+          }
+      
+          const existingRecord = existingData.rows[0];
+      
+          // Update query
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
               full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
-              current_address = $5, destination_address = $6, coordinate_point = $7, house_photo = $8,
-              request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
-              network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
-              hpm_pic = $17, status = $18, completion_date = $19, photo_front_of_house_url = $20,
-              photo_left_of_home_url = $21, photo_right_of_home_url = $22, photo_old_fat_url = $23, photo_new_fat_url = $24
-            WHERE id = $25
+              current_address = $5, destination_address = $6, coordinate_point = $7,
+              request_purpose = $8, email_address = $9, hpm_check_result = $10,
+              network = $11, home_id_status = $12, remarks = $13, notes_recommendations = $14,
+              hpm_pic = $15, status = $16, completion_date = $17,
+              photo_front_of_house_url = $18,
+              photo_left_of_home_url = $19,
+              photo_right_of_home_url = $20,
+              photo_old_fat_url = $21,
+              photo_new_fat_url = $22
+            WHERE id = $23
             RETURNING *`,
             [
-              uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, current_address,
-              destination_address, coordinate_point, uploadResult.housePhotoUrl, request_purpose, email_address,
-              hpm_check_result, uploadResult.homepassId, network, home_id_status, remarks, notes_recommendations,
-              hpm_pic, status, completion_date, imageUrlFrontOfHouse, imageUrlLeftOfHouse, 
-              imageUrlRightOfHouse, imageUrlOldFat, imageUrlNewFat, id
+              uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid,
+              current_address, destination_address, coordinate_point, request_purpose, email_address,
+              hpm_check_result, network, home_id_status, remarks, notes_recommendations,
+              hpm_pic, status, completion_date,
+              imageUrlFrontOfHouse || existingRecord.photo_front_of_house_url,
+              imageUrlLeftOfHouse || existingRecord.photo_left_of_home_url,
+              imageUrlRightOfHouse || existingRecord.photo_right_of_home_url,
+              imageUrlOldFat || existingRecord.photo_old_fat_url,
+              imageUrlNewFat || existingRecord.photo_new_fat_url,
+              id
             ]
           );
-          if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Record not found' });
-          } else {
-            res.status(200).json(result.rows[0]);
-          }
+      
+          res.status(200).json(result.rows[0]);
         } catch (error) {
           console.error(error);
           res.status(500).json({ error: 'Internal Server Error' });
