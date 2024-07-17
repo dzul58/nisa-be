@@ -116,7 +116,7 @@ class HomepassController {
       }
     
       static async createHomepassRequest(req, res) {
-        const { name, email } = req.userAccount
+        const { name, email } = req.userAccount;
         const {
           current_address,
           destination_address,
@@ -137,18 +137,43 @@ class HomepassController {
           imageUrlOldFat,
           imageUrlNewFat
         } = req.body;
-      
+    
         try {
+          // Generate the custom ID
+          const currentDate = moment();
+          const formattedDate = currentDate.format('YYYYMMDD');
+          
+          // Get the latest ID for today
+          const latestIdResult = await poolNisa.query(
+            `SELECT id FROM homepass_moving_address_request 
+             WHERE id LIKE $1 
+             ORDER BY id DESC LIMIT 1`,
+            [`HMA${formattedDate}%`]
+          );
+    
+          let newId;
+          if (latestIdResult.rows.length > 0) {
+            const latestId = latestIdResult.rows[0].id;
+            const latestNumber = parseInt(latestId.slice(-2));
+            newId = `HMA${formattedDate}${(latestNumber + 1).toString().padStart(2, '0')}`;
+          } else {
+            newId = `HMA${formattedDate}01`;
+          }
+    
+          const timestamp = currentDate.format('YYYY-MM-DD HH:mm:ss');
+    
           const result = await poolNisa.query(
             `INSERT INTO homepass_moving_address_request (
-              full_name_pic, submission_from, request_source, customer_cid, current_address,
+              id, timestamp, full_name_pic, submission_from, request_source, customer_cid, current_address,
               destination_address, coordinate_point, request_purpose, email_address,
               hpm_check_result, network, home_id_status, remarks, notes_recommendations,
               hpm_pic, status, completion_date, photo_front_of_house_url, photo_left_of_home_url, 
-              photo_right_of_home_url, photo_old_fat_url, photo_new_fat_url, id
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22. $23)
+              photo_right_of_home_url, photo_old_fat_url, photo_new_fat_url
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
             RETURNING *`,
             [
+              newId,
+              timestamp,
               name, 
               uploadResult.submissionFrom, 
               uploadResult.requestSource, 
