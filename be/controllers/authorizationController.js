@@ -84,6 +84,9 @@ class AuthorizationController{
           res.status(500).json({ message: 'Internal server error' });
         }
       }
+      static async updateAccess(req, res, next){
+        
+      }
 }
 
 module.exports = AuthorizationController
