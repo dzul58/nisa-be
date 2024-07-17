@@ -1,5 +1,5 @@
 const poolNisa = require('../config/configNisa')
-// const moment = require('moment');
+const moment = require('moment');
 
 class HomepassController {
   static async getAllHomepassRequests(req, res) {
@@ -160,6 +160,7 @@ class HomepassController {
             newId = `HMA${formattedDate}01`;
           }
     
+          // Format timestamp without milliseconds
           const timestamp = currentDate.format('YYYY-MM-DD HH:mm:ss');
     
           const result = await poolNisa.query(
