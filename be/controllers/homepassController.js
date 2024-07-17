@@ -1,5 +1,5 @@
 const poolNisa = require('../config/configNisa')
-
+// const moment = require('moment');
 
 class HomepassController {
   static async getAllHomepassRequests(req, res) {
@@ -145,8 +145,8 @@ class HomepassController {
               destination_address, coordinate_point, request_purpose, email_address,
               hpm_check_result, network, home_id_status, remarks, notes_recommendations,
               hpm_pic, status, completion_date, photo_front_of_house_url, photo_left_of_home_url, 
-              photo_right_of_home_url, photo_old_fat_url, photo_new_fat_url
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+              photo_right_of_home_url, photo_old_fat_url, photo_new_fat_url, id
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22. $23)
             RETURNING *`,
             [
               name, 
