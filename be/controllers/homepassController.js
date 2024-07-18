@@ -135,22 +135,22 @@ class HomepassController {
           imageUrlLeftOfHouse,
           imageUrlRightOfHouse,
           imageUrlOldFat,
-          imageUrlNewFat
+          imageUrlNewFat,
+          response_hpm_location,
+          response_hpm_source
         } = req.body;
-    
+      
         try {
-          // Generate the custom ID
           const currentDate = moment();
           const formattedDate = currentDate.format('YYYYMMDD');
           
-          // Get the latest ID for today
           const latestIdResult = await poolNisa.query(
             `SELECT id FROM homepass_moving_address_request 
              WHERE id LIKE $1 
              ORDER BY id DESC LIMIT 1`,
             [`HMA${formattedDate}%`]
           );
-    
+      
           let newId;
           if (latestIdResult.rows.length > 0) {
             const latestId = latestIdResult.rows[0].id;
@@ -159,18 +159,18 @@ class HomepassController {
           } else {
             newId = `HMA${formattedDate}01`;
           }
-    
-          // Format timestamp without milliseconds
+      
           const timestamp = currentDate.format('YYYY-MM-DD HH:mm:ss');
-    
+      
           const result = await poolNisa.query(
             `INSERT INTO homepass_moving_address_request (
               id, timestamp, full_name_pic, submission_from, request_source, customer_cid, current_address,
               destination_address, coordinate_point, request_purpose, email_address,
               hpm_check_result, network, home_id_status, remarks, notes_recommendations,
               hpm_pic, status, completion_date, photo_front_of_house_url, photo_left_of_home_url, 
-              photo_right_of_home_url, photo_old_fat_url, photo_new_fat_url
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+              photo_right_of_home_url, photo_old_fat_url, photo_new_fat_url,
+              response_hpm_location, response_hpm_source, response_hpm_status
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
             RETURNING *`,
             [
               newId,
@@ -196,7 +196,10 @@ class HomepassController {
               imageUrlLeftOfHouse, 
               imageUrlRightOfHouse, 
               imageUrlOldFat, 
-              imageUrlNewFat
+              imageUrlNewFat,
+              response_hpm_location,
+              response_hpm_source,
+              'untaken'  // Default value for response_hpm_status
             ]
           );
           res.status(201).json(result.rows[0]);
@@ -227,7 +230,9 @@ class HomepassController {
           imageUrlLeftOfHouse,
           imageUrlRightOfHouse,
           imageUrlOldFat,
-          imageUrlNewFat
+          imageUrlNewFat,
+          response_hpm_location,
+          response_hpm_source
         } = req.body;
       
         try {
@@ -239,7 +244,6 @@ class HomepassController {
       
           const existingRecord = existingData.rows[0];
       
-          // Update query
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
               full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
@@ -251,8 +255,11 @@ class HomepassController {
               photo_left_of_home_url = $19,
               photo_right_of_home_url = $20,
               photo_old_fat_url = $21,
-              photo_new_fat_url = $22
-            WHERE id = $23
+              photo_new_fat_url = $22,
+              response_hpm_location = $23,
+              response_hpm_source = $24,
+              response_hpm_status = $25
+            WHERE id = $26
             RETURNING *`,
             [
               uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid,
@@ -264,6 +271,9 @@ class HomepassController {
               imageUrlRightOfHouse || existingRecord.photo_right_of_home_url,
               imageUrlOldFat || existingRecord.photo_old_fat_url,
               imageUrlNewFat || existingRecord.photo_new_fat_url,
+              response_hpm_location || existingRecord.response_hpm_location,
+              response_hpm_source || existingRecord.response_hpm_source,
+              'untaken',  // Default value for response_hpm_status
               id
             ]
           );
@@ -278,7 +288,7 @@ class HomepassController {
 
       static async updateHomepassRequest(req, res) {
         const { id } = req.params;
-        const {name} = req.userAccount
+        const { name } = req.userAccount;
         const {
           uploadResult,
           current_address,
@@ -293,29 +303,38 @@ class HomepassController {
           notes_recommendations,
           status,
           completion_date,
-          response_hpm_timestamp, // default value 'date time now'
-          response_hpm_status, //default value 'untaken'
           response_hpm_location,
           response_hpm_source
         } = req.body;
-    
+      
         try {
+          const currentTimestamp = new Date().toISOString();
+      
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
               full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
               current_address = $5, destination_address = $6, coordinate_point = $7, house_photo = $8,
               request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
               network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
-              hpm_pic = $17, status = $18, completion_date = $19
-            WHERE id = $20
+              hpm_pic = $17, status = $18, completion_date = $19,
+              response_hpm_location = $20, response_hpm_source = $21,
+              response_hpm_status = $22, response_hpm_timestamp = $23
+            WHERE id = $24
             RETURNING *`,
             [
-              uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, current_address,
-              destination_address, coordinate_point, uploadResult.housePhotoUrl, request_purpose, email_address,
-              hpm_check_result, uploadResult.homepassId, network, home_id_status, remarks, notes_recommendations,
-              name, status, completion_date, id
+              uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, 
+              current_address, destination_address, coordinate_point, uploadResult.housePhotoUrl, 
+              request_purpose, email_address, hpm_check_result, uploadResult.homepassId, 
+              network, home_id_status, remarks, notes_recommendations,
+              name, status, completion_date,
+              response_hpm_location,
+              response_hpm_source,
+              'untaken',  // Default value for response_hpm_status
+              currentTimestamp,  // Current timestamp for response_hpm_timestamp
+              id
             ]
           );
+          
           if (result.rows.length === 0) {
             res.status(404).json({ error: 'Record not found' });
           } else {
