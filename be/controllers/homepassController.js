@@ -199,7 +199,7 @@ class HomepassController {
               imageUrlNewFat,
               response_hpm_location,
               response_hpm_source,
-              'untaken'  // Default value for response_hpm_status
+              'Untaken'  // Default value for response_hpm_status
             ]
           );
           res.status(201).json(result.rows[0]);
@@ -273,7 +273,7 @@ class HomepassController {
               imageUrlNewFat || existingRecord.photo_new_fat_url,
               response_hpm_location || existingRecord.response_hpm_location,
               response_hpm_source || existingRecord.response_hpm_source,
-              'untaken',  // Default value for response_hpm_status
+              'Untaken',  // Default value for response_hpm_status
               id
             ]
           );
@@ -329,7 +329,7 @@ class HomepassController {
               name, status, completion_date,
               response_hpm_location,
               response_hpm_source,
-              'untaken',  // Default value for response_hpm_status
+              'Untaken',  // Default value for response_hpm_status
               currentTimestamp,  // Current timestamp for response_hpm_timestamp
               id
             ]
