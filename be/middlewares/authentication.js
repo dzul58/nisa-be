@@ -16,13 +16,13 @@ const authentication = async (req, res, next) => {
     }
 
     const jwtPayload = verifyToken(accessToken);
-    const result = await poolNisa.query(
+    const result = await poolNisa.query( //tambahin survey ops
       `SELECT
         u.muse_name,
         u.muse_code,
         u.muse_email,
         CASE
-          WHEN p.mupf_name IN ('Customer Service', 'HPM') THEN p.mupf_name
+          WHEN p.mupf_name IN ('Customer Service', 'HPM') THEN p.mupf_name 
           ELSE 'View Only'
         END AS mupf_name
       FROM
