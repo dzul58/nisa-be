@@ -231,7 +231,6 @@ class HomepassController {
         } = req.body;
       
         try {
-          // Pertama, ambil data yang ada
           const existingData = await poolNisa.query('SELECT * FROM homepass_moving_address_request WHERE id = $1', [id]);
           
           if (existingData.rows.length === 0) {
@@ -293,7 +292,11 @@ class HomepassController {
           remarks,
           notes_recommendations,
           status,
-          completion_date
+          completion_date,
+          response_hpm_timestamp, // default value 'date time now'
+          response_hpm_status, //default value 'untaken'
+          response_hpm_location,
+          response_hpm_source
         } = req.body;
     
         try {
