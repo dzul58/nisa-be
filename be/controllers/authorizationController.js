@@ -85,7 +85,7 @@ class AuthorizationController{
         }
       }
       static async updateAccess(req, res, next){
-        
+        //buat agar ticket close saat di access
       }
 }
 
