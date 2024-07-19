@@ -38,7 +38,8 @@ app.post('/api/upload-photo-old-fat', upload.single('photo_old_fat'), UploadCont
 app.post('/api/upload-photo-new-fat', upload.single('photo_new_fat'), UploadController.uploadImageNewFat);
 app.post('/api/upload', upload.single('file'), UploadController.uploadFile);
 
-app.get('/api/status/:id', AuthorizationController.updateAccess) //buat endpoint get untuk response_hpm_status menjadi Taken
+app.get('/api/status-taken/:id', AuthorizationController.updateTakenAccess) //buat endpoint get untuk response_hpm_status menjadi Taken
+app.get('/api/status-untaken/:id', AuthorizationController.updateUntakenAccess)
 app.get('/api/homepass/:id', HomepassController.getHomepassRequestById);
 app.put('/api/update-homepass/:id', HomepassController.updateHomepassRequest);
 app.put('/api/edit-homepass/:id', HomepassController.editHomepassRequest);

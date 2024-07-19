@@ -84,7 +84,8 @@ class AuthorizationController{
           res.status(500).json({ message: 'Internal server error' });
         }
       }
-      static async updateAccess(req, res, next) {
+
+      static async updateTakenAccess(req, res, next) {
         try {
           const { id } = req.params;
     
@@ -104,6 +105,34 @@ class AuthorizationController{
           const updatedRequest = result.rows[0];
           res.status(200).json({ 
             message: 'Response HPM status updated to Taken'
+          });
+        } catch (error) {
+          console.error('Error in updateAccess:', error);
+          res.status(500).json({ message: 'Internal server error' });
+        }
+      }
+
+
+      static async updateUntakenAccess(req, res, next) {
+        try {
+          const { id } = req.params;
+    
+          const query = `
+            UPDATE homepass_moving_address_request
+            SET response_hpm_status = 'Untaken'
+            WHERE id = $1
+            RETURNING *
+          `;
+    
+          const result = await poolNisa.query(query, [id]);
+    
+          if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Homepass request not found' });
+          }
+    
+          const updatedRequest = result.rows[0];
+          res.status(200).json({ 
+            message: 'Response HPM status updated to Untaken'
           });
         } catch (error) {
           console.error('Error in updateAccess:', error);
