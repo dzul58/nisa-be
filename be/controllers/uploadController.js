@@ -145,6 +145,42 @@ class UploadController {
       res.status(500).send(`An error occurred while uploading the ${imageType} image.`);
     }
   }
+
+  static async uploadVideo(req, res) {
+    try {
+      const uploadedFile = req.file;
+      if (!uploadedFile) {
+        return res.status(400).send('No video was uploaded.');
+      }
+  
+      // Generate a unique identifier for the filename
+      const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(4).toString('hex');
+      const originalName = path.parse(uploadedFile.originalname).name;
+      const extension = path.extname(uploadedFile.originalname);
+      const uniqueFilename = `video-${originalName}-${uniqueSuffix}${extension}`;
+  
+      const remoteFilePath = `/home/web/upload_videos/${uniqueFilename}`;
+  
+      const sftp = new Client();
+      await sftp.connect({
+        host: '192.168.202.166',
+        port: '22',
+        username: 'web',
+        password: 'Myrep123!'
+      });
+  
+      // Upload the video file buffer directly
+      await sftp.put(uploadedFile.buffer, remoteFilePath);
+  
+      sftp.end();
+  
+      const videoUrl = `http://192.168.202.166:8080/videos/${uniqueFilename}`;
+      res.send({ message: 'Video berhasil diunggah', videoUrl });
+    } catch (err) {
+      console.error('Error uploading video:', err);
+      res.status(500).send('An error occurred while uploading the video.');
+    }
+  }
 }
 
 module.exports = UploadController;
