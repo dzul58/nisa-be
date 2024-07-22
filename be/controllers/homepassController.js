@@ -17,12 +17,18 @@ class HomepassController {
         homeIdStatus,
         full_name_pic,
         status,
-        page = 1, // default page is 1
-        limit = 12 // default limit is 10
+        page = 1,
+        limit = 12
       } = req.query;
 
       const filters = [];
       const filterValues = [];
+
+      // Add condition for Branch roles
+      if (role.includes('Branch')) {
+        filters.push(`hpm_check_result = $${filterValues.length + 1}`);
+        filterValues.push('Survey Ops.');
+      }
 
       if (timestamp) {
         filters.push(`timestamp ILIKE $${filterValues.length + 1}`);
@@ -79,9 +85,8 @@ class HomepassController {
         filterValues.push(`%${status}%`);
       }
 
-      const offset = (page - 1) * limit; // Calculate offset based on page and limit
+      const offset = (page - 1) * limit;
 
-      // Assemble query with placeholders
       const query = `
         SELECT * FROM homepass_moving_address_request 
         ${filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""}
@@ -95,7 +100,6 @@ class HomepassController {
         ${filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""}
       `;
 
-      // Execute the queries
       const [result, countResult] = await Promise.all([
         poolNisa.query(query, [...filterValues, limit, offset]),
         poolNisa.query(countQuery, filterValues)
