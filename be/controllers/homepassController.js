@@ -4,6 +4,7 @@ const moment = require('moment');
 class HomepassController {
   static async getAllHomepassRequests(req, res) {
     try {
+      const { role } = req.userAccount;
       const {
         timestamp,
         id,
