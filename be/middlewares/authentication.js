@@ -16,13 +16,14 @@ const authentication = async (req, res, next) => {
     }
 
     const jwtPayload = verifyToken(accessToken);
-    const result = await poolNisa.query( //tambahin survey ops
+    const result = await poolNisa.query(
       `SELECT
         u.muse_name,
         u.muse_code,
         u.muse_email,
         CASE
           WHEN p.mupf_name IN ('Customer Service', 'HPM') THEN p.mupf_name 
+          WHEN p.mupf_name LIKE '%Branch%' THEN p.mupf_name
           ELSE 'View Only'
         END AS mupf_name
       FROM
@@ -41,13 +42,10 @@ const authentication = async (req, res, next) => {
       throw new Error('User not found');
     }
 
-        // Manipulate mupf_name as requested
-    // console.log(user.muse_name, "ini muse_name");
     const formatName = user.muse_code
-      .split('.') // Split by dot
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
-      .join(' '); // Join with space
-
+      .split('.')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
 
     req.userAccount = {
       email: user.muse_email,
@@ -55,8 +53,6 @@ const authentication = async (req, res, next) => {
       username: user.muse_code,
       role: user.mupf_name
     };
-
-    // console.log(req.userAccount, "ini isinya");
 
     next();
   } catch (error) {
