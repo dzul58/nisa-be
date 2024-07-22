@@ -401,7 +401,9 @@ class HomepassController {
               photo3_survey_ops = $4,
               photo4_survey_ops = $5,
               notes_survey_ops = $6
-            WHERE id = $7
+              response_hpm_status = $7
+
+            WHERE id = $8
             RETURNING *
           `;
     
@@ -412,6 +414,7 @@ class HomepassController {
             photo3_survey_ops,
             photo4_survey_ops,
             notes_survey_ops,
+            "Untaken",
             id
           ];
     
