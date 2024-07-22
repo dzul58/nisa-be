@@ -91,20 +91,24 @@ class AuthorizationController{
           const email = req.userAccount.email;
       
           const query = `
-            SELECT
-              u.muse_name,
-              u.muse_code,
-              u.muse_email,
-              p.mupf_name
-            FROM
-              mst_user u
-            JOIN
-              mst_user_group g ON u.muse_code = g.mugr_muse_code
-            JOIN
-              mst_user_profile p ON g.mugr_mupf_code = p.mupf_code
-            WHERE
-              p.mupf_name = 'HPM' AND
-              u.muse_email = $1
+SELECT
+    u.muse_name,
+    u.muse_code,
+    u.muse_email,
+    u.muse_password,
+    CASE
+        WHEN p.mupf_name LIKE '%Branch%' THEN 'Survey Ops.'
+        ELSE p.mupf_name
+    END AS mupf_name
+FROM
+    mst_user u
+JOIN
+    mst_user_group g ON u.muse_code = g.mugr_muse_code
+JOIN
+    mst_user_profile p ON g.mugr_mupf_code = p.mupf_code
+WHERE
+    (p.mupf_name = 'HPM' OR p.mupf_name LIKE '%Branch%') AND
+    u.muse_email = $1;
           `;
       
           const result = await poolNisa.query(query, [email]);
