@@ -5,14 +5,16 @@ class HomepassController {
   static async getAllHomepassRequests(req, res) {
     try {
       const {
+        timestamp,
+        id,
         request_purpose,
-        submissionFrom,
-        requestSource,
-        customerCid,
+        customer_cid,
+        homepass_id,
+        home_id_status,
         homepassId,
         network,
         homeIdStatus,
-        hpmPic,
+        full_name_pic,
         status,
         page = 1, // default page is 1
         limit = 12 // default limit is 10
@@ -21,29 +23,29 @@ class HomepassController {
       const filters = [];
       const filterValues = [];
 
+      if (timestamp) {
+        filters.push(`timestamp ILIKE $${filterValues.length + 1}`);
+        filterValues.push(`%${timestamp}%`);
+      }
+
+      if (id) {
+        filters.push(`id ILIKE $${filterValues.length + 1}`);
+        filterValues.push(`%${id}%`);
+      }
+
       if (request_purpose) {
-        filters.push(`full_name_pic ILIKE $${filterValues.length + 1}`);
+        filters.push(`request_purpose ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${request_purpose}%`);
       }
 
-      if (submissionFrom) {
-        filters.push(`submission_from ILIKE $${filterValues.length + 1}`);
-        filterValues.push(`%${submissionFrom}%`);
-      }
-
-      if (requestSource) {
-        filters.push(`request_source ILIKE $${filterValues.length + 1}`);
-        filterValues.push(`%${requestSource}%`);
-      }
-
-      if (customerCid) {
+      if (customer_cid) {
         filters.push(`customer_cid ILIKE $${filterValues.length + 1}`);
-        filterValues.push(`%${customerCid}%`);
+        filterValues.push(`%${customer_cid}%`);
       }
 
-      if (homepassId) {
+      if (homepass_id) {
         filters.push(`homepass_id ILIKE $${filterValues.length + 1}`);
-        filterValues.push(`%${homepassId}%`);
+        filterValues.push(`%${homepass_id}%`);
       }
 
       if (network) {
@@ -51,14 +53,24 @@ class HomepassController {
         filterValues.push(`%${network}%`);
       }
 
+      if (home_id_status) {
+        filters.push(`home_id_status ILIKE $${filterValues.length + 1}`);
+        filterValues.push(`%${home_id_status}%`);
+      }
+
+      if (homepassId) {
+        filters.push(`homepass_id ILIKE $${filterValues.length + 1}`);
+        filterValues.push(`%${homepassId}%`);
+      }
+
       if (homeIdStatus) {
         filters.push(`home_id_status ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${homeIdStatus}%`);
       }
 
-      if (hpmPic) {
+      if (full_name_pic) {
         filters.push(`hpm_pic ILIKE $${filterValues.length + 1}`);
-        filterValues.push(`%${hpmPic}%`);
+        filterValues.push(`%${full_name_pic}%`);
       }
 
       if (status) {
