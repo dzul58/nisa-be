@@ -37,13 +37,19 @@ app.post('/api/upload-photo-left-of-house', upload.single('photo_left_of_house')
 app.post('/api/upload-photo-right-of-house', upload.single('photo_right_of_house'), UploadController.uploadImageRightOfHouse);
 app.post('/api/upload-photo-old-fat', upload.single('photo_old_fat'), UploadController.uploadImageOldFat);
 app.post('/api/upload-photo-new-fat', upload.single('photo_new_fat'), UploadController.uploadImageNewFat);
+app.post('/api/upload-survey-ops-photo1', upload.single('photo_survey_ops1'), UploadController.uploadSurveyOpsPhoto1);
+app.post('/api/upload-survey-ops-photo2', upload.single('photo_survey_ops2'), UploadController.uploadSurveyOpsPhoto2);
+app.post('/api/upload-survey-ops-photo3', upload.single('photo_survey_ops3'), UploadController.uploadSurveyOpsPhoto3);
+app.post('/api/upload-survey-ops-photo4', upload.single('photo_survey_ops4'), UploadController.uploadSurveyOpsPhoto4);
 app.post('/api/upload', upload.single('file'), UploadController.uploadFile);
 
 app.get('/api/status-taken/:id', AuthorizationController.updateTakenAccess) //buat endpoint get untuk response_hpm_status menjadi Taken
 app.get('/api/status-untaken/:id', AuthorizationController.updateUntakenAccess)
 app.get('/api/homepass/:id', HomepassController.getHomepassRequestById);
 app.put('/api/update-homepass/:id', HomepassController.updateHomepassRequest);
+app.put('/api/update-ops/:id', HomepassController.updateSurveyOpsData);
 app.put('/api/edit-homepass/:id', HomepassController.editHomepassRequest);
+
 
 app.listen(port, () => {
   console.log(`NISA app listening on port ${port}`);

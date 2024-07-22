@@ -379,6 +379,56 @@ class HomepassController {
           res.status(500).json({ error: 'Internal Server Error' });
         }
       }
+
+      static async updateSurveyOpsData(req, res) {
+        try {
+          const { id } = req.params;
+          const {
+            freitag_survey_ops,
+            photo1_survey_ops,
+            photo2_survey_ops,
+            photo3_survey_ops,
+            photo4_survey_ops,
+            notes_survey_ops
+          } = req.body;
+    
+          const updateQuery = `
+            UPDATE homepass_moving_address_request
+            SET
+              freitag_survey_ops = $1,
+              photo1_survey_ops = $2,
+              photo2_survey_ops = $3,
+              photo3_survey_ops = $4,
+              photo4_survey_ops = $5,
+              notes_survey_ops = $6
+            WHERE id = $7
+            RETURNING *
+          `;
+    
+          const values = [
+            freitag_survey_ops,
+            photo1_survey_ops,
+            photo2_survey_ops,
+            photo3_survey_ops,
+            photo4_survey_ops,
+            notes_survey_ops,
+            id
+          ];
+    
+          const result = await poolNisa.query(updateQuery, values);
+    
+          if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Record not found" });
+          }
+    
+          res.status(200).json({
+            updatedRecord: result.rows[0]
+          });
+        } catch (error) {
+          console.error('Error updating Survey Ops data:', error);
+          res.status(500).json({ error: "Internal Server Error" });
+        }
+      }
 }
 
 module.exports = HomepassController

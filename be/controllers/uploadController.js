@@ -60,6 +60,22 @@ class UploadController {
     await UploadController.handleImageUpload(req, res, 'new_fat');
   }
 
+  static async uploadSurveyOpsPhoto1(req, res) {
+    await UploadController.handleImageUpload(req, res, 'survey_ops_1');
+  }
+  
+  static async uploadSurveyOpsPhoto2(req, res) {
+    await UploadController.handleImageUpload(req, res, 'survey_ops_2');
+  }
+  
+  static async uploadSurveyOpsPhoto3(req, res) {
+    await UploadController.handleImageUpload(req, res, 'survey_ops_3');
+  }
+  
+  static async uploadSurveyOpsPhoto4(req, res) {
+    await UploadController.handleImageUpload(req, res, 'survey_ops_4');
+  }
+
   static async handleImageUpload(req, res, imageType) {
     try {
       const uploadedFile = req.file;
@@ -106,6 +122,18 @@ class UploadController {
           break;
         case 'new_fat':
           responseKey = 'imageUrlNewFat';
+          break;
+        case 'survey_ops_1':
+          responseKey = 'imageUrlSurveyOps1';
+          break;
+        case 'survey_ops_2':
+          responseKey = 'imageUrlSurveyOps2';
+          break;
+        case 'survey_ops_3':
+          responseKey = 'imageUrlSurveyOps3';
+          break;
+        case 'survey_ops_4':
+          responseKey = 'imageUrlSurveyOps4';
           break;
         default:
           responseKey = 'imageUrl';
