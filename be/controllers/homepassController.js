@@ -319,9 +319,7 @@ class HomepassController {
           remarks,
           notes_recommendations,
           status,
-          completion_date,
-          response_hpm_location,
-          response_hpm_source
+          completion_date
         } = req.body;
       
         try {
@@ -334,9 +332,8 @@ class HomepassController {
               request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
               network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
               hpm_pic = $17, status = $18, completion_date = $19,
-              response_hpm_location = $20, response_hpm_source = $21,
-              response_hpm_status = $22, response_hpm_timestamp = $23
-            WHERE id = $24
+              response_hpm_status = $20, response_hpm_timestamp = $21
+            WHERE id = $22
             RETURNING *`,
             [
               uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, 
@@ -344,8 +341,6 @@ class HomepassController {
               request_purpose, email_address, hpm_check_result, uploadResult.homepassId, 
               network, home_id_status, remarks, notes_recommendations,
               name, status, completion_date,
-              response_hpm_location,
-              response_hpm_source,
               'Untaken',  // Default value for response_hpm_status
               currentTimestamp,  // Current timestamp for response_hpm_timestamp
               id
