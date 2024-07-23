@@ -17,6 +17,7 @@ class HomepassController {
         homeIdStatus,
         full_name_pic,
         status,
+        hpm_check_result,
         page = 1,
         limit = 12
       } = req.query;
@@ -83,6 +84,11 @@ class HomepassController {
       if (status) {
         filters.push(`status ILIKE $${filterValues.length + 1}`);
         filterValues.push(`%${status}%`);
+      }
+
+      if (hpm_check_result) {
+        filters.push(`hpm_check_result ILIKE $${filterValues.length + 1}`);
+        filterValues.push(`%${hpm_check_result}%`);
       }
 
       const offset = (page - 1) * limit;
