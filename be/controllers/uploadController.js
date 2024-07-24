@@ -31,7 +31,7 @@ class UploadController {
 
       sftp.end();
 
-      const imageUrl = `http://192.168.202.166:8080/${uniqueFilename}`;
+      const imageUrl = `https://ma-storage.oss.myrepublic.co.id/${uniqueFilename}`;
       res.send({ message: 'File berhasil diunggah', imageUrl });
     } catch (err) {
       console.error('Error uploading file:', err);
@@ -102,7 +102,7 @@ class UploadController {
 
       sftp.end();
 
-      const imageUrl = `http://192.168.202.166:8080/${uniqueFilename}`;
+      const imageUrl = `https://ma-storage.oss.myrepublic.co.id/${uniqueFilename}`;
       
       // Adjust the imageUrl name based on the image type
       // Menyesuaikan nama imageUrl berdasarkan jenis gambar
@@ -174,7 +174,7 @@ class UploadController {
   
       sftp.end();
   
-      const videoUrl = `http://192.168.202.166:8080/videos/${uniqueFilename}`;
+      const videoUrl = `https://ma-storage.oss.myrepublic.co.id/videos/${uniqueFilename}`;
       res.send({ message: 'Video berhasil diunggah', videoUrl });
     } catch (err) {
       console.error('Error uploading video:', err);
