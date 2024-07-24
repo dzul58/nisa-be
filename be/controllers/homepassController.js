@@ -435,21 +435,23 @@ class HomepassController {
 
       static async searchAreas(req, res) {
         try {
+          const { query } = req.query;
           const searchQuery = `
             SELECT DISTINCT msar_area_name AS area
             FROM msts_area 
-            ORDER BY msar_area_name NULLS LAST
+            WHERE msar_area_name ILIKE $1
+            ORDER BY msar_area_name
+            LIMIT 10
           `;
-          const result = await poolNisa.query(searchQuery);
+          const result = await poolNisa.query(searchQuery, [`%${query}%`]);
           
-          // Filter out null values and empty strings
           const areas = result.rows
             .map(row => row.area)
             .filter(area => area !== null && area !== '');
           
           res.status(200).json(areas);
         } catch (error) {
-          console.error('Error fetching areas:', error);
+          console.error('Error searching areas:', error);
           res.status(500).json({ error: 'Internal Server Error' });
         }
       }
