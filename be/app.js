@@ -29,6 +29,7 @@ app.use(authentication);
 app.get('/api/authorization-cs', AuthorizationController.authorizationCs);
 app.get('/api/authorization-hpm', AuthorizationController.authorizationHpm);
 app.get('/api/authorization-ops', AuthorizationController.authorizationOps);
+app.get('/api/areas', HomepassController.searchAreas);
 app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
 

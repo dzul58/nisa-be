@@ -432,6 +432,24 @@ class HomepassController {
           res.status(500).json({ error: "Internal Server Error" });
         }
       }
+
+      static async searchAreas(req, res) {
+        try {
+          const { query } = req.query;
+          const searchQuery = `
+            SELECT DISTINCT msar_area_name 
+            FROM msts_area 
+            WHERE msar_area_name ILIKE $1 
+            ORDER BY msar_area_name 
+            LIMIT 10
+          `;
+          const result = await poolNisa.query(searchQuery, [`%${query}%`]);
+          res.status(200).json(result.rows);
+        } catch (error) {
+          console.error('Error searching areas:', error);
+          res.status(500).json({ error: 'Internal Server Error' });
+        }
+      }
 }
 
 module.exports = HomepassController
