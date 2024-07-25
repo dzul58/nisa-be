@@ -390,6 +390,7 @@ class HomepassController {
             photo2_survey_ops,
             photo3_survey_ops,
             photo4_survey_ops,
+            video_survey_ops,
             notes_survey_ops
           } = req.body;
       
@@ -403,7 +404,8 @@ class HomepassController {
               photo4_survey_ops = $5,
               notes_survey_ops = $6,
               response_hpm_status = $7
-            WHERE id = $8
+              video_survey_ops = $8
+            WHERE id = $9
             RETURNING *
           `;
       
@@ -415,6 +417,7 @@ class HomepassController {
             photo4_survey_ops,
             notes_survey_ops,
             "Untaken",
+            video_survey_ops,
             id
           ];
       
