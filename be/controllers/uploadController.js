@@ -102,7 +102,7 @@ class UploadController {
 
       sftp.end();
 
-      const imageUrl = `https://ma-storage.oss.myrepublic.co.id/${uniqueFilename}`;
+      const imageUrl = `https://ma-storage.oss.myrepublic.co.id/images/${uniqueFilename}`;
       
       // Adjust the imageUrl name based on the image type
       // Menyesuaikan nama imageUrl berdasarkan jenis gambar
