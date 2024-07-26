@@ -309,7 +309,7 @@ class HomepassController {
       }
 
 
-      static async updateHomepassRequest(req, res) {
+      static async updateHomepassRequest(req, res) { // ketika status memiliki value "done" maka completion_date akan otomatis terisi Completion date
         const { id } = req.params;
         const { name } = req.userAccount;
         const {
@@ -385,11 +385,9 @@ class HomepassController {
         try {
           const { id } = req.params;
           const {
-            freitag_survey_ops,
             photo1_survey_ops,
             photo2_survey_ops,
             photo3_survey_ops,
-            photo4_survey_ops,
             video_survey_ops,
             notes_survey_ops
           } = req.body;
@@ -397,27 +395,23 @@ class HomepassController {
           const updateQuery = `
             UPDATE homepass_moving_address_request
             SET
-              freitag_survey_ops = $1,
-              photo1_survey_ops = $2,
-              photo2_survey_ops = $3,
-              photo3_survey_ops = $4,
-              photo4_survey_ops = $5,
-              notes_survey_ops = $6,
-              response_hpm_status = $7
-              video_survey_ops = $8
-            WHERE id = $9
+              photo1_survey_ops = $1,
+              photo2_survey_ops = $2,
+              photo3_survey_ops = $3,
+              video_survey_ops = $4,
+              notes_survey_ops = $5,
+              response_hpm_status = $6
+            WHERE id = $7
             RETURNING *
           `;
       
           const values = [
-            freitag_survey_ops,
             photo1_survey_ops,
             photo2_survey_ops,
             photo3_survey_ops,
-            photo4_survey_ops,
+            video_survey_ops,
             notes_survey_ops,
             "Untaken",
-            video_survey_ops,
             id
           ];
       
