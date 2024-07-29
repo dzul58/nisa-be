@@ -324,14 +324,13 @@ class HomepassController {
           home_id_status,
           remarks,
           notes_recommendations,
-          status,
-          completion_date
+          status
         } = req.body;
       
         try {
           const currentTimestamp = moment().format('YYYY-MM-DD HH:mm:ss');
           
-          // Check if status is 'Done' and set completion_date accordingly
+          // Set completion_date based on status
           const newCompletionDate = status === 'Done' ? currentTimestamp : null;
     
           // Fetch the current record to check existing values
