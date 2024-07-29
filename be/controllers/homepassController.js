@@ -329,7 +329,7 @@ class HomepassController {
         } = req.body;
       
         try {
-          const currentTimestamp = new Date().toISOString();
+          const currentTimestamp = moment().format('YYYY-MM-DD HH:mm:ss');
           
           // Check if status is 'Done' and set completion_date accordingly
           const newCompletionDate = status === 'Done' ? currentTimestamp : completion_date;
