@@ -332,7 +332,7 @@ class HomepassController {
           const currentTimestamp = moment().format('YYYY-MM-DD HH:mm:ss');
           
           // Check if status is 'Done' and set completion_date accordingly
-          const newCompletionDate = status === 'Done' ? currentTimestamp : completion_date;
+          const newCompletionDate = status === 'Done' ? currentTimestamp : null;
     
           // Fetch the current record to check existing values
           const currentRecord = await poolNisa.query(
