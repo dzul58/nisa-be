@@ -309,7 +309,7 @@ class HomepassController {
       }
 
 
-      static async updateHomepassRequest(req, res) { // ketika status memiliki value "done" maka completion_date akan otomatis terisi Completion date
+      static async updateHomepassRequest(req, res) {
         const { id } = req.params;
         const { name } = req.userAccount;
         const {
@@ -330,7 +330,20 @@ class HomepassController {
       
         try {
           const currentTimestamp = new Date().toISOString();
-      
+          
+          // Check if status is 'Done' and set completion_date accordingly
+          const newCompletionDate = status === 'Done' ? currentTimestamp : completion_date;
+    
+          // Fetch the current record to check existing values
+          const currentRecord = await poolNisa.query(
+            'SELECT hpm_pic, response_hpm_timestamp FROM homepass_moving_address_request WHERE id = $1',
+            [id]
+          );
+    
+          // Determine values for hpm_pic and response_hpm_timestamp
+          const newHpmPic = currentRecord.rows[0].hpm_pic || name;
+          const newResponseHpmTimestamp = currentRecord.rows[0].response_hpm_timestamp || currentTimestamp;
+    
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
               full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
@@ -346,9 +359,9 @@ class HomepassController {
               current_address, destination_address, coordinate_point, uploadResult.housePhotoUrl, 
               request_purpose, email_address, hpm_check_result, uploadResult.homepassId, 
               network, home_id_status, remarks, notes_recommendations,
-              name, status, completion_date,
+              newHpmPic, status, newCompletionDate,
               'Untaken',  // Default value for response_hpm_status
-              currentTimestamp,  // Current timestamp for response_hpm_timestamp
+              newResponseHpmTimestamp,
               id
             ]
           );
