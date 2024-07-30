@@ -464,7 +464,6 @@ class HomepassController {
           res.status(500).json({ error: 'Internal Server Error' });
         }
       }
-    
 }
 
 module.exports = HomepassController
