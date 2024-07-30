@@ -309,6 +309,73 @@ class HomepassController {
       }
 
 
+      // static async updateHomepassRequest(req, res) {
+      //   const { id } = req.params;
+      //   const { name } = req.userAccount;
+      //   const {
+      //     uploadResult,
+      //     current_address,
+      //     destination_address,
+      //     coordinate_point,
+      //     request_purpose,
+      //     email_address,
+      //     hpm_check_result,
+      //     network,
+      //     home_id_status,
+      //     remarks,
+      //     notes_recommendations,
+      //     status
+      //   } = req.body;
+      
+      //   try {
+      //     const currentTimestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+          
+      //     // Set completion_date based on status
+      //     const newCompletionDate = status === 'Done' ? currentTimestamp : null;
+    
+      //     // Fetch the current record to check existing values
+      //     const currentRecord = await poolNisa.query(
+      //       'SELECT hpm_pic, response_hpm_timestamp FROM homepass_moving_address_request WHERE id = $1',
+      //       [id]
+      //     );
+    
+      //     // Determine values for hpm_pic and response_hpm_timestamp
+      //     const newHpmPic = currentRecord.rows[0].hpm_pic || name;
+      //     const newResponseHpmTimestamp = currentRecord.rows[0].response_hpm_timestamp || currentTimestamp;
+    
+      //     const result = await poolNisa.query(
+      //       `UPDATE homepass_moving_address_request SET
+      //         full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
+      //         current_address = $5, destination_address = $6, coordinate_point = $7, house_photo = $8,
+      //         request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
+      //         network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
+      //         hpm_pic = $17, status = $18, completion_date = $19,
+      //         response_hpm_status = $20, response_hpm_timestamp = $21
+      //       WHERE id = $22
+      //       RETURNING *`,
+      //       [
+      //         uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, 
+      //         current_address, destination_address, coordinate_point, uploadResult.housePhotoUrl, 
+      //         request_purpose, email_address, hpm_check_result, uploadResult.homepassId, 
+      //         network, home_id_status, remarks, notes_recommendations,
+      //         newHpmPic, status, newCompletionDate,
+      //         'Untaken',  // Default value for response_hpm_status
+      //         newResponseHpmTimestamp,
+      //         id
+      //       ]
+      //     );
+          
+      //     if (result.rows.length === 0) {
+      //       res.status(404).json({ error: 'Record not found' });
+      //     } else {
+      //       res.status(200).json(result.rows[0]);
+      //     }
+      //   } catch (error) {
+      //     console.error(error);
+      //     res.status(500).json({ error: 'Internal Server Error' });
+      //   }
+      // }
+
       static async updateHomepassRequest(req, res) {
         const { id } = req.params;
         const { name } = req.userAccount;
@@ -330,19 +397,20 @@ class HomepassController {
         try {
           const currentTimestamp = moment().format('YYYY-MM-DD HH:mm:ss');
           
-          // Set completion_date based on status
-          const newCompletionDate = status === 'Done' ? currentTimestamp : null;
-    
           // Fetch the current record to check existing values
           const currentRecord = await poolNisa.query(
-            'SELECT hpm_pic, response_hpm_timestamp FROM homepass_moving_address_request WHERE id = $1',
+            'SELECT hpm_pic, response_hpm_timestamp, completion_date FROM homepass_moving_address_request WHERE id = $1',
             [id]
           );
-    
-          // Determine values for hpm_pic and response_hpm_timestamp
-          const newHpmPic = currentRecord.rows[0].hpm_pic || name;
-          const newResponseHpmTimestamp = currentRecord.rows[0].response_hpm_timestamp || currentTimestamp;
-    
+      
+          const existingRecord = currentRecord.rows[0];
+      
+          // Determine values for hpm_pic, response_hpm_timestamp, and completion_date
+          const newHpmPic = existingRecord.hpm_pic || name;
+          const newResponseHpmTimestamp = existingRecord.response_hpm_timestamp || currentTimestamp;
+          const newCompletionDate = status === 'Done' ? (existingRecord.completion_date || currentTimestamp) : existingRecord.completion_date;
+      
+          // Update the homepass_moving_address_request table
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
               full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
@@ -364,12 +432,39 @@ class HomepassController {
               id
             ]
           );
-          
+      
           if (result.rows.length === 0) {
-            res.status(404).json({ error: 'Record not found' });
-          } else {
-            res.status(200).json(result.rows[0]);
+            return res.status(404).json({ error: 'Record not found' });
           }
+      
+          // Update homepass_moving_address_hpm_kpi table
+          const updateKpiQuery = `
+            INSERT INTO homepass_moving_address_hpm_kpi (
+              hpm_pic_name, day, create_verify_date, total_tickets, completed_tickets
+            ) VALUES (
+              $1, $2, $3, 
+              CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
+              CASE WHEN $4::timestamp IS NOT NULL AND $5::timestamp IS NOT NULL THEN 1 ELSE 0 END
+            )
+            ON CONFLICT (hpm_pic_name, create_verify_date)
+            DO UPDATE SET
+              total_tickets = homepass_moving_address_hpm_kpi.total_tickets + 
+                CASE WHEN $4::timestamp IS NOT NULL AND homepass_moving_address_hpm_kpi.total_tickets = 0 THEN 1 ELSE 0 END,
+              completed_tickets = homepass_moving_address_hpm_kpi.completed_tickets + 
+                CASE WHEN $4::timestamp IS NOT NULL AND $5::timestamp IS NOT NULL AND 
+                     (homepass_moving_address_hpm_kpi.completed_tickets = 0 OR $5::timestamp > homepass_moving_address_hpm_kpi.create_verify_date) 
+                THEN 1 ELSE 0 END
+          `;
+      
+          await poolNisa.query(updateKpiQuery, [
+            newHpmPic,
+            moment(newResponseHpmTimestamp).format('dddd'),
+            moment(newResponseHpmTimestamp).format('YYYY-MM-DD'),
+            newResponseHpmTimestamp,
+            newCompletionDate
+          ]);
+      
+          res.status(200).json(result.rows[0]);
         } catch (error) {
           console.error(error);
           res.status(500).json({ error: 'Internal Server Error' });
