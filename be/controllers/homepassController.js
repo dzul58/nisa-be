@@ -761,17 +761,20 @@ class HomepassController {
               WITH upsert AS (
                   UPDATE homepass_moving_address_hpm_kpi
                   SET 
-                      total_tickets = total_tickets + 
-                          CASE WHEN $4::timestamp IS NOT NULL AND total_tickets = 0 THEN 1 ELSE 0 END,
-                      completed_tickets = completed_tickets + 
+                      total_tickets = 
                           CASE 
-                              WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL AND (completed_tickets = 0 OR $6::timestamp > create_verify_date) THEN 1
-                              WHEN $5 != 'Done' AND $7 = 'Done' THEN -1
-                              ELSE 0 
+                              WHEN $4::timestamp IS NOT NULL AND total_tickets = 0 THEN 1
+                              ELSE total_tickets
+                          END,
+                      completed_tickets = 
+                          CASE 
+                              WHEN $5 = 'Done' AND $7 != 'Done' THEN completed_tickets + 1
+                              WHEN $5 != 'Done' AND $7 = 'Done' THEN GREATEST(completed_tickets - 1, 0)
+                              ELSE completed_tickets
                           END,
                       total_completion_time = 
                           CASE 
-                              WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 
+                              WHEN $5 = 'Done' AND $7 != 'Done' THEN 
                                   (total_completion_time::interval + $8::interval)::varchar
                               WHEN $5 != 'Done' AND $7 = 'Done' THEN 
                                   GREATEST((total_completion_time::interval - $8::interval)::interval, '00:00:00'::interval)::varchar
@@ -785,9 +788,9 @@ class HomepassController {
               )
               SELECT 
                   $1, $2, $3::date, 
-                  CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-                  CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-                  CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN $8 ELSE '00:00:00' END
+                  1, -- Selalu set 1 untuk record baru
+                  CASE WHEN $5 = 'Done' THEN 1 ELSE 0 END,
+                  CASE WHEN $5 = 'Done' THEN $8 ELSE '00:00:00' END
               WHERE NOT EXISTS (SELECT 1 FROM upsert)
           `;
   
@@ -801,39 +804,6 @@ class HomepassController {
               existingRecord.status,
               completionTime
           ]);
-  
-          // Update total_tickets jika response_hpm_timestamp berubah menjadi tidak null
-          if (!existingRecord.response_hpm_timestamp && newResponseHpmTimestamp) {
-              await poolNisa.query(`
-                  UPDATE homepass_moving_address_hpm_kpi
-                  SET total_tickets = total_tickets + 1
-                  WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
-              `, [
-                  newHpmPic,
-                  moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
-              ]);
-          }
-  
-          // Update completed_tickets jika status berubah menjadi 'Done' atau bukan 'Done'
-          if (existingRecord.status !== 'Done' && status === 'Done') {
-              await poolNisa.query(`
-                  UPDATE homepass_moving_address_hpm_kpi
-                  SET completed_tickets = completed_tickets + 1
-                  WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
-              `, [
-                  newHpmPic,
-                  moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
-              ]);
-          } else if (existingRecord.status === 'Done' && status !== 'Done') {
-              await poolNisa.query(`
-                  UPDATE homepass_moving_address_hpm_kpi
-                  SET completed_tickets = completed_tickets - 1
-                  WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
-              `, [
-                  newHpmPic,
-                  moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
-              ]);
-          }
   
           // Hitung dan update average_completion_time
           const updateAverageQuery = `
