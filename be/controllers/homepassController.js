@@ -588,10 +588,10 @@ class HomepassController {
                     UPDATE homepass_moving_address_hpm_kpi
                     SET 
                         total_tickets = total_tickets + 
-                            CASE WHEN $4::timestamp IS NOT NULL AND total_tickets = 0 THEN 1 ELSE 0 END,
+                            CASE WHEN $4::timestamp IS NOT NULL AND $7::timestamp IS NULL THEN 1 ELSE 0 END,
                         completed_tickets = completed_tickets + 
                             CASE 
-                                WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL AND (completed_tickets = 0 OR $6::timestamp > create_verify_date) THEN 1
+                                WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL AND ($7::timestamp IS NULL OR $7 != 'Done') THEN 1
                                 WHEN $5 != 'Done' AND $7 = 'Done' THEN -1
                                 ELSE 0 
                             END,
@@ -684,6 +684,7 @@ class HomepassController {
             res.status(500).json({ error: 'Internal Server Error', details: error.message });
         }
     }
+    
     
     
 
