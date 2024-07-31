@@ -403,6 +403,10 @@ class HomepassController {
             [id]
           );
       
+          if (currentRecord.rows.length === 0) {
+            return res.status(404).json({ error: 'Record not found' });
+          }
+      
           const existingRecord = currentRecord.rows[0];
       
           // Determine values for hpm_pic, response_hpm_timestamp, and completion_date
@@ -433,27 +437,28 @@ class HomepassController {
             ]
           );
       
-          if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Record not found' });
-          }
-      
           // Update homepass_moving_address_hpm_kpi table
           const updateKpiQuery = `
+            WITH upsert AS (
+              UPDATE homepass_moving_address_hpm_kpi
+              SET 
+                total_tickets = total_tickets + 
+                  CASE WHEN $4::timestamp IS NOT NULL AND total_tickets = 0 THEN 1 ELSE 0 END,
+                completed_tickets = completed_tickets + 
+                  CASE WHEN $4::timestamp IS NOT NULL AND $5::timestamp IS NOT NULL AND 
+                       (completed_tickets = 0 OR $5::timestamp > create_verify_date) 
+                  THEN 1 ELSE 0 END
+              WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
+              RETURNING *
+            )
             INSERT INTO homepass_moving_address_hpm_kpi (
               hpm_pic_name, day, create_verify_date, total_tickets, completed_tickets
-            ) VALUES (
-              $1, $2, $3, 
+            )
+            SELECT 
+              $1, $2, $3::date, 
               CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
               CASE WHEN $4::timestamp IS NOT NULL AND $5::timestamp IS NOT NULL THEN 1 ELSE 0 END
-            )
-            ON CONFLICT (hpm_pic_name, create_verify_date)
-            DO UPDATE SET
-              total_tickets = homepass_moving_address_hpm_kpi.total_tickets + 
-                CASE WHEN $4::timestamp IS NOT NULL AND homepass_moving_address_hpm_kpi.total_tickets = 0 THEN 1 ELSE 0 END,
-              completed_tickets = homepass_moving_address_hpm_kpi.completed_tickets + 
-                CASE WHEN $4::timestamp IS NOT NULL AND $5::timestamp IS NOT NULL AND 
-                     (homepass_moving_address_hpm_kpi.completed_tickets = 0 OR $5::timestamp > homepass_moving_address_hpm_kpi.create_verify_date) 
-                THEN 1 ELSE 0 END
+            WHERE NOT EXISTS (SELECT 1 FROM upsert)
           `;
       
           await poolNisa.query(updateKpiQuery, [
@@ -466,8 +471,8 @@ class HomepassController {
       
           res.status(200).json(result.rows[0]);
         } catch (error) {
-          console.error(error);
-          res.status(500).json({ error: 'Internal Server Error' });
+          console.error('Error in updateHomepassRequest:', error);
+          res.status(500).json({ error: 'Internal Server Error', details: error.message });
         }
       }
 
