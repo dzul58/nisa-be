@@ -628,6 +628,39 @@ class HomepassController {
                 completionTime
             ]);
     
+            // Update total_tickets jika response_hpm_timestamp berubah menjadi tidak null
+            if (!existingRecord.response_hpm_timestamp && newResponseHpmTimestamp) {
+                await poolNisa.query(`
+                    UPDATE homepass_moving_address_hpm_kpi
+                    SET total_tickets = total_tickets + 1
+                    WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
+                `, [
+                    newHpmPic,
+                    moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
+                ]);
+            }
+    
+            // Update completed_tickets jika status berubah menjadi 'Done' atau bukan 'Done'
+            if (existingRecord.status !== 'Done' && status === 'Done') {
+                await poolNisa.query(`
+                    UPDATE homepass_moving_address_hpm_kpi
+                    SET completed_tickets = completed_tickets + 1
+                    WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
+                `, [
+                    newHpmPic,
+                    moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
+                ]);
+            } else if (existingRecord.status === 'Done' && status !== 'Done') {
+                await poolNisa.query(`
+                    UPDATE homepass_moving_address_hpm_kpi
+                    SET completed_tickets = completed_tickets - 1
+                    WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
+                `, [
+                    newHpmPic,
+                    moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
+                ]);
+            }
+    
             // Hitung dan update average_completion_time
             const updateAverageQuery = `
                 UPDATE homepass_moving_address_hpm_kpi
@@ -651,6 +684,7 @@ class HomepassController {
             res.status(500).json({ error: 'Internal Server Error', details: error.message });
         }
     }
+    
     
 
 
