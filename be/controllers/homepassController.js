@@ -399,7 +399,7 @@ class HomepassController {
           
           // Ambil data record saat ini
           const currentRecord = await poolNisa.query(
-            'SELECT hpm_pic, response_hpm_timestamp, completion_date, status FROM homepass_moving_address_request WHERE id = $1',
+            'SELECT hpm_pic, response_hpm_timestamp, completion_date, status, completion_duration FROM homepass_moving_address_request WHERE id = $1',
             [id]
           );
       
@@ -414,11 +414,10 @@ class HomepassController {
           const newResponseHpmTimestamp = existingRecord.response_hpm_timestamp || currentTimestamp;
           const newCompletionDate = status === 'Done' ? (existingRecord.completion_date || currentTimestamp) : null;
       
-          // Hitung waktu penyelesaian
-          let completionTime = '00:00:00';
+          // Hitung completion_duration
+          let completionDuration = null;
           if (newCompletionDate && newResponseHpmTimestamp) {
-            const duration = moment.duration(moment(newCompletionDate).diff(moment(newResponseHpmTimestamp)));
-            completionTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
+            completionDuration = moment.duration(moment(newCompletionDate).diff(moment(newResponseHpmTimestamp))).asSeconds();
           }
       
           // Update tabel homepass_moving_address_request
@@ -429,8 +428,8 @@ class HomepassController {
               request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
               network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
               hpm_pic = $17, status = $18, completion_date = $19,
-              response_hpm_status = $20, response_hpm_timestamp = $21
-            WHERE id = $22
+              response_hpm_status = $20, response_hpm_timestamp = $21, completion_duration = $22
+            WHERE id = $23
             RETURNING *`,
             [
               uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid, 
@@ -438,7 +437,7 @@ class HomepassController {
               request_purpose, email_address, hpm_check_result, uploadResult.homepassId, 
               network, home_id_status, remarks, notes_recommendations,
               newHpmPic, status, newCompletionDate,
-              'Untaken', newResponseHpmTimestamp,
+              'Untaken', newResponseHpmTimestamp, completionDuration,
               id
             ]
           );
@@ -458,10 +457,12 @@ class HomepassController {
                   END,
                 total_completion_time = 
                   CASE 
-                    WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 
-                      (total_completion_time::interval + $8::interval)::varchar
-                    WHEN $5 != 'Done' AND $7 = 'Done' THEN 
-                      GREATEST((total_completion_time::interval - $8::interval)::interval, '00:00:00'::interval)::varchar
+                    WHEN $5 = 'Done' AND $8 IS NOT NULL THEN 
+                      (total_completion_time::interval + ($8 || ' seconds')::interval)::varchar
+                    WHEN $5 != 'Done' AND $7 = 'Done' AND $9 IS NOT NULL THEN 
+                      GREATEST((total_completion_time::interval - ($9 || ' seconds')::interval)::interval, '00:00:00'::interval)::varchar
+                    WHEN $5 != 'Done' AND $7 != 'Done' AND $9 IS NOT NULL AND $8 IS NULL THEN
+                      GREATEST((total_completion_time::interval - ($9 || ' seconds')::interval)::interval, '00:00:00'::interval)::varchar
                     ELSE total_completion_time
                   END
               WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
@@ -474,7 +475,7 @@ class HomepassController {
               $1, $2, $3::date, 
               CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
               CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-              CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN $8 ELSE '00:00:00' END
+              CASE WHEN $5 = 'Done' AND $8 IS NOT NULL THEN ($8 || ' seconds')::interval::varchar ELSE '00:00:00' END
             WHERE NOT EXISTS (SELECT 1 FROM upsert)
           `;
       
@@ -486,7 +487,8 @@ class HomepassController {
             status,
             newCompletionDate,
             existingRecord.status,
-            completionTime
+            completionDuration,
+            existingRecord.completion_duration
           ]);
       
           // Hitung dan update average_completion_time
