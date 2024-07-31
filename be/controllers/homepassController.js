@@ -457,12 +457,12 @@ class HomepassController {
                   END,
                 total_completion_time = 
                   CASE 
-                    WHEN $5 = 'Done' AND $8 IS NOT NULL THEN 
-                      (total_completion_time::interval + ($8 || ' seconds')::interval)::varchar
-                    WHEN $5 != 'Done' AND $7 = 'Done' AND $9 IS NOT NULL THEN 
-                      GREATEST((total_completion_time::interval - ($9 || ' seconds')::interval)::interval, '00:00:00'::interval)::varchar
-                    WHEN $5 != 'Done' AND $7 != 'Done' AND $9 IS NOT NULL AND $8 IS NULL THEN
-                      GREATEST((total_completion_time::interval - ($9 || ' seconds')::interval)::interval, '00:00:00'::interval)::varchar
+                    WHEN $5 = 'Done' AND $8::integer IS NOT NULL THEN 
+                      (total_completion_time::interval + ($8::integer || ' seconds')::interval)::varchar
+                    WHEN $5 != 'Done' AND $7 = 'Done' AND $9::integer IS NOT NULL THEN 
+                      GREATEST((total_completion_time::interval - ($9::integer || ' seconds')::interval)::interval, '00:00:00'::interval)::varchar
+                    WHEN $5 != 'Done' AND $7 != 'Done' AND $9::integer IS NOT NULL AND $8::integer IS NULL THEN
+                      GREATEST((total_completion_time::interval - ($9::integer || ' seconds')::interval)::interval, '00:00:00'::interval)::varchar
                     ELSE total_completion_time
                   END
               WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
@@ -475,7 +475,7 @@ class HomepassController {
               $1, $2, $3::date, 
               CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
               CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-              CASE WHEN $5 = 'Done' AND $8 IS NOT NULL THEN ($8 || ' seconds')::interval::varchar ELSE '00:00:00' END
+              CASE WHEN $5 = 'Done' AND $8::integer IS NOT NULL THEN ($8::integer || ' seconds')::interval::varchar ELSE '00:00:00' END
             WHERE NOT EXISTS (SELECT 1 FROM upsert)
           `;
       
