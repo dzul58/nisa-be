@@ -399,7 +399,7 @@ class HomepassController {
           
           // Fetch the current record to check existing values
           const currentRecord = await poolNisa.query(
-            'SELECT hpm_pic, response_hpm_timestamp, completion_date FROM homepass_moving_address_request WHERE id = $1',
+            'SELECT hpm_pic, response_hpm_timestamp, completion_date, status FROM homepass_moving_address_request WHERE id = $1',
             [id]
           );
       
@@ -412,7 +412,7 @@ class HomepassController {
           // Determine values for hpm_pic, response_hpm_timestamp, and completion_date
           const newHpmPic = existingRecord.hpm_pic || name;
           const newResponseHpmTimestamp = existingRecord.response_hpm_timestamp || currentTimestamp;
-          const newCompletionDate = status === 'Done' ? (existingRecord.completion_date || currentTimestamp) : existingRecord.completion_date;
+          const newCompletionDate = status === 'Done' ? (existingRecord.completion_date || currentTimestamp) : null;
       
           // Update the homepass_moving_address_request table
           const result = await poolNisa.query(
@@ -437,6 +437,12 @@ class HomepassController {
             ]
           );
       
+          // Calculate completion time
+          let completionTime = null;
+          if (newCompletionDate && newResponseHpmTimestamp) {
+            completionTime = moment(newCompletionDate).diff(moment(newResponseHpmTimestamp), 'seconds');
+          }
+      
           // Update homepass_moving_address_hpm_kpi table
           const updateKpiQuery = `
             WITH upsert AS (
@@ -445,19 +451,28 @@ class HomepassController {
                 total_tickets = total_tickets + 
                   CASE WHEN $4::timestamp IS NOT NULL AND total_tickets = 0 THEN 1 ELSE 0 END,
                 completed_tickets = completed_tickets + 
-                  CASE WHEN $4::timestamp IS NOT NULL AND $5::timestamp IS NOT NULL AND 
-                       (completed_tickets = 0 OR $5::timestamp > create_verify_date) 
-                  THEN 1 ELSE 0 END
+                  CASE 
+                    WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL AND (completed_tickets = 0 OR $6::timestamp > create_verify_date) THEN 1
+                    WHEN $5 != 'Done' AND $7 = 'Done' THEN -1
+                    ELSE 0 
+                  END,
+                total_completion_time = 
+                  CASE 
+                    WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN total_completion_time + $8
+                    WHEN $5 != 'Done' AND $7 = 'Done' THEN GREATEST(total_completion_time - $8, 0)
+                    ELSE total_completion_time
+                  END
               WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
               RETURNING *
             )
             INSERT INTO homepass_moving_address_hpm_kpi (
-              hpm_pic_name, day, create_verify_date, total_tickets, completed_tickets
+              hpm_pic_name, day, create_verify_date, total_tickets, completed_tickets, total_completion_time
             )
             SELECT 
               $1, $2, $3::date, 
               CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-              CASE WHEN $4::timestamp IS NOT NULL AND $5::timestamp IS NOT NULL THEN 1 ELSE 0 END
+              CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 1 ELSE 0 END,
+              CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN $8 ELSE 0 END
             WHERE NOT EXISTS (SELECT 1 FROM upsert)
           `;
       
@@ -466,7 +481,26 @@ class HomepassController {
             moment(newResponseHpmTimestamp).format('dddd'),
             moment(newResponseHpmTimestamp).format('YYYY-MM-DD'),
             newResponseHpmTimestamp,
-            newCompletionDate
+            status,
+            newCompletionDate,
+            existingRecord.status,
+            completionTime
+          ]);
+      
+          // Calculate and update average_completion_time
+          const updateAverageQuery = `
+            UPDATE homepass_moving_address_hpm_kpi
+            SET average_completion_time = 
+              CASE 
+                WHEN completed_tickets > 0 THEN total_completion_time / completed_tickets
+                ELSE 0
+              END
+            WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
+          `;
+      
+          await poolNisa.query(updateAverageQuery, [
+            newHpmPic,
+            moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
           ]);
       
           res.status(200).json(result.rows[0]);
