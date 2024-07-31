@@ -377,143 +377,143 @@ class HomepassController {
       // }
 
       static async updateHomepassRequest(req, res) {
-          const { id } = req.params;
-          const { name } = req.userAccount;
-          const {
-              uploadResult,
-              current_address,
-              destination_address,
-              coordinate_point,
-              request_purpose,
-              email_address,
-              hpm_check_result,
-              network,
-              home_id_status,
-              remarks,
-              notes_recommendations,
-              status
-          } = req.body;
-      
-          try {
-              const currentTimestamp = moment().format('YYYY-MM-DD HH:mm:ss');
-      
-              // Ambil data record saat ini
-              const currentRecord = await poolNisa.query(
-                  'SELECT hpm_pic, response_hpm_timestamp, completion_date, status, completion_duration FROM homepass_moving_address_request WHERE id = $1',
-                  [id]
-              );
-      
-              if (currentRecord.rows.length === 0) {
-                  return res.status(404).json({ error: 'Record tidak ditemukan' });
-              }
-      
-              const existingRecord = currentRecord.rows[0];
-      
-              // Tentukan nilai untuk hpm_pic, response_hpm_timestamp, dan completion_date
-              const newHpmPic = existingRecord.hpm_pic || name;
-              const newResponseHpmTimestamp = existingRecord.response_hpm_timestamp || currentTimestamp;
-              const newCompletionDate = status === 'Done' ? (existingRecord.completion_date || currentTimestamp) : null;
-      
-              // Hitung completion_duration
-              let completionDuration = null;
-              if (newCompletionDate && newResponseHpmTimestamp) {
-                  completionDuration = moment.duration(moment(newCompletionDate).diff(moment(newResponseHpmTimestamp))).asSeconds();
-              }
-      
-              // Update tabel homepass_moving_address_request
-              const result = await poolNisa.query(
-                  `UPDATE homepass_moving_address_request SET
-                    full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
-                    current_address = $5, destination_address = $6, coordinate_point = $7, house_photo = $8,
-                    request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
-                    network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
-                    hpm_pic = $17, status = $18, completion_date = $19,
-                    response_hpm_status = $20, response_hpm_timestamp = $21, completion_duration = $22
-                  WHERE id = $23
-                  RETURNING *`,
-                  [
-                      uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid,
-                      current_address, destination_address, coordinate_point, uploadResult.housePhotoUrl,
-                      request_purpose, email_address, hpm_check_result, uploadResult.homepassId,
-                      network, home_id_status, remarks, notes_recommendations,
-                      newHpmPic, status, newCompletionDate,
-                      'Untaken', newResponseHpmTimestamp, completionDuration,
-                      id
-                  ]
-              );
-      
-              // Update tabel homepass_moving_address_hpm_kpi
-              const updateKpiQuery = `
-                  WITH upsert AS (
-                    UPDATE homepass_moving_address_hpm_kpi
-                    SET 
-                      total_tickets = total_tickets + 
-                        CASE WHEN $4::timestamp IS NOT NULL AND total_tickets = 0 THEN 1 ELSE 0 END,
-                      completed_tickets = completed_tickets + 
-                        CASE 
-                          WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL AND (completed_tickets = 0 OR $6::timestamp > create_verify_date) THEN 1
-                          WHEN $5 != 'Done' AND $7 = 'Done' THEN -1
-                          ELSE 0 
-                        END,
-                      total_completion_time = 
-                        CASE 
-                          WHEN $5 = 'Done' AND $8::interval IS NOT NULL THEN 
-                            total_completion_time + ($8::integer || ' seconds')::interval
-                          WHEN $5 != 'Done' AND $7 = 'Done' AND $9::interval IS NOT NULL THEN 
-                            GREATEST(total_completion_time - ($9::integer || ' seconds')::interval, '00:00:00'::interval)
-                          WHEN $5 != 'Done' AND $7 != 'Done' AND $9::interval IS NOT NULL AND $8::interval IS NULL THEN
-                            GREATEST(total_completion_time - ($9::integer || ' seconds')::interval, '00:00:00'::interval)
-                          ELSE total_completion_time
-                        END
-                    WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
-                    RETURNING *
-                  )
-                  INSERT INTO homepass_moving_address_hpm_kpi (
-                    hpm_pic_name, day, create_verify_date, total_tickets, completed_tickets, total_completion_time
-                  )
-                  SELECT 
-                    $1, $2, $3::date, 
-                    CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-                    CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-                    CASE WHEN $5 = 'Done' AND $8::interval IS NOT NULL THEN ($8::integer || ' seconds')::interval ELSE '00:00:00'::interval END
-                  WHERE NOT EXISTS (SELECT 1 FROM upsert)
-                `;
-      
-              await poolNisa.query(updateKpiQuery, [
-                  newHpmPic,
-                  moment(newResponseHpmTimestamp).format('dddd'),
-                  moment(newResponseHpmTimestamp).format('YYYY-MM-DD'),
-                  newResponseHpmTimestamp,
-                  status,
-                  newCompletionDate,
-                  existingRecord.status,
-                  completionDuration,
-                  existingRecord.completion_duration
-              ]);
-      
-              // Hitung dan update average_completion_time
-              const updateAverageQuery = `
+        const { id } = req.params;
+        const { name } = req.userAccount;
+        const {
+            uploadResult,
+            current_address,
+            destination_address,
+            coordinate_point,
+            request_purpose,
+            email_address,
+            hpm_check_result,
+            network,
+            home_id_status,
+            remarks,
+            notes_recommendations,
+            status
+        } = req.body;
+    
+        try {
+            const currentTimestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+    
+            // Ambil data record saat ini
+            const currentRecord = await poolNisa.query(
+                'SELECT hpm_pic, response_hpm_timestamp, completion_date, status, completion_duration FROM homepass_moving_address_request WHERE id = $1',
+                [id]
+            );
+    
+            if (currentRecord.rows.length === 0) {
+                return res.status(404).json({ error: 'Record tidak ditemukan' });
+            }
+    
+            const existingRecord = currentRecord.rows[0];
+    
+            // Tentukan nilai untuk hpm_pic, response_hpm_timestamp, dan completion_date
+            const newHpmPic = existingRecord.hpm_pic || name;
+            const newResponseHpmTimestamp = existingRecord.response_hpm_timestamp || currentTimestamp;
+            const newCompletionDate = status === 'Done' ? (existingRecord.completion_date || currentTimestamp) : null;
+    
+            // Hitung completion_duration
+            let completionDuration = null;
+            if (newCompletionDate && newResponseHpmTimestamp) {
+                completionDuration = moment.duration(moment(newCompletionDate).diff(moment(newResponseHpmTimestamp))).asSeconds();
+            }
+    
+            // Update tabel homepass_moving_address_request
+            const result = await poolNisa.query(
+                `UPDATE homepass_moving_address_request SET
+                  full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
+                  current_address = $5, destination_address = $6, coordinate_point = $7, house_photo = $8,
+                  request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
+                  network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
+                  hpm_pic = $17, status = $18, completion_date = $19,
+                  response_hpm_status = $20, response_hpm_timestamp = $21, completion_duration = $22::interval
+                WHERE id = $23
+                RETURNING *`,
+                [
+                    uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid,
+                    current_address, destination_address, coordinate_point, uploadResult.housePhotoUrl,
+                    request_purpose, email_address, hpm_check_result, uploadResult.homepassId,
+                    network, home_id_status, remarks, notes_recommendations,
+                    newHpmPic, status, newCompletionDate,
+                    'Untaken', newResponseHpmTimestamp, `${completionDuration} seconds`,
+                    id
+                ]
+            );
+    
+            // Update tabel homepass_moving_address_hpm_kpi
+            const updateKpiQuery = `
+                WITH upsert AS (
                   UPDATE homepass_moving_address_hpm_kpi
-                  SET average_completion_time = 
-                    CASE 
-                      WHEN completed_tickets > 0 THEN 
-                        (total_completion_time / completed_tickets)::interval
-                      ELSE '00:00:00'::interval
-                    END
-                  WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
-                `;
-      
-              await poolNisa.query(updateAverageQuery, [
-                  newHpmPic,
-                  moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
-              ]);
-      
-              res.status(200).json(result.rows[0]);
-          } catch (error) {
-              console.error('Error in updateHomepassRequest:', error);
-              res.status(500).json({ error: 'Internal Server Error', details: error.message });
-          }
-      }
+                  SET 
+                    total_tickets = total_tickets + 
+                      CASE WHEN $4::timestamp IS NOT NULL AND total_tickets = 0 THEN 1 ELSE 0 END,
+                    completed_tickets = completed_tickets + 
+                      CASE 
+                        WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL AND (completed_tickets = 0 OR $6::timestamp > create_verify_date) THEN 1
+                        WHEN $5 != 'Done' AND $7 = 'Done' THEN -1
+                        ELSE 0 
+                      END,
+                    total_completion_time = 
+                      CASE 
+                        WHEN $5 = 'Done' AND $8::interval IS NOT NULL THEN 
+                          total_completion_time + $8::interval
+                        WHEN $5 != 'Done' AND $7 = 'Done' AND $9::interval IS NOT NULL THEN 
+                          GREATEST(total_completion_time - $9::interval, '00:00:00'::interval)
+                        WHEN $5 != 'Done' AND $7 != 'Done' AND $9::interval IS NOT NULL AND $8::interval IS NULL THEN
+                          GREATEST(total_completion_time - $9::interval, '00:00:00'::interval)
+                        ELSE total_completion_time
+                      END
+                  WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
+                  RETURNING *
+                )
+                INSERT INTO homepass_moving_address_hpm_kpi (
+                  hpm_pic_name, day, create_verify_date, total_tickets, completed_tickets, total_completion_time
+                )
+                SELECT 
+                  $1, $2, $3::date, 
+                  CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
+                  CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 1 ELSE 0 END,
+                  CASE WHEN $5 = 'Done' AND $8::interval IS NOT NULL THEN $8::interval ELSE '00:00:00'::interval END
+                WHERE NOT EXISTS (SELECT 1 FROM upsert)
+              `;
+    
+            await poolNisa.query(updateKpiQuery, [
+                newHpmPic,
+                moment(newResponseHpmTimestamp).format('dddd'),
+                moment(newResponseHpmTimestamp).format('YYYY-MM-DD'),
+                newResponseHpmTimestamp,
+                status,
+                newCompletionDate,
+                existingRecord.status,
+                `${completionDuration} seconds`,
+                existingRecord.completion_duration
+            ]);
+    
+            // Hitung dan update average_completion_time
+            const updateAverageQuery = `
+                UPDATE homepass_moving_address_hpm_kpi
+                SET average_completion_time = 
+                  CASE 
+                    WHEN completed_tickets > 0 THEN 
+                      (total_completion_time / completed_tickets)
+                    ELSE '00:00:00'::interval
+                  END
+                WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
+              `;
+    
+            await poolNisa.query(updateAverageQuery, [
+                newHpmPic,
+                moment(newResponseHpmTimestamp).format('YYYY-MM-DD')
+            ]);
+    
+            res.status(200).json(result.rows[0]);
+        } catch (error) {
+            console.error('Error in updateHomepassRequest:', error);
+            res.status(500).json({ error: 'Internal Server Error', details: error.message });
+        }
+    }
       
 
 
