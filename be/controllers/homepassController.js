@@ -734,8 +734,8 @@ class HomepassController {
                   request_purpose = $9, email_address = $10, hpm_check_result = $11, homepass_id = $12,
                   network = $13, home_id_status = $14, remarks = $15, notes_recommendations = $16,
                   hpm_pic = $17, status = $18, completion_date = $19,
-                  response_hpm_status = $20, response_hpm_timestamp = $21
-              WHERE id = $22
+                  response_hpm_timestamp = $20
+              WHERE id = $21
               RETURNING *`,
               [
                   uploadResult.fullNamePic, uploadResult.submissionFrom, uploadResult.requestSource, uploadResult.customerCid,
@@ -743,7 +743,6 @@ class HomepassController {
                   request_purpose, email_address, hpm_check_result, uploadResult.homepassId,
                   network, home_id_status, remarks, notes_recommendations,
                   newHpmPic, status, newCompletionDate,
-                  'Untaken',  // Nilai default untuk response_hpm_status
                   newResponseHpmTimestamp,
                   id
               ]
@@ -756,51 +755,40 @@ class HomepassController {
               completionTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
           }
   
-          // Update tabel homepass_moving_address_hpm_kpi
+          // Update atau insert ke tabel homepass_moving_address_hpm_kpi
           const updateKpiQuery = `
-              WITH upsert AS (
-                  UPDATE homepass_moving_address_hpm_kpi
-                  SET 
-                      total_tickets = 
-                          CASE 
-                              WHEN $4::timestamp IS NOT NULL AND total_tickets = 0 THEN 1
-                              ELSE total_tickets
-                          END,
-                      completed_tickets = 
-                          CASE 
-                              WHEN $5 = 'Done' AND $7 != 'Done' THEN completed_tickets + 1
-                              WHEN $5 != 'Done' AND $7 = 'Done' THEN GREATEST(completed_tickets - 1, 0)
-                              ELSE completed_tickets
-                          END,
-                      total_completion_time = 
-                          CASE 
-                              WHEN $5 = 'Done' AND $7 != 'Done' THEN 
-                                  (total_completion_time::interval + $8::interval)::varchar
-                              WHEN $5 != 'Done' AND $7 = 'Done' THEN 
-                                  GREATEST((total_completion_time::interval - $8::interval)::interval, '00:00:00'::interval)::varchar
-                              ELSE total_completion_time
-                          END
-                  WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
-                  RETURNING *
-              )
-              INSERT INTO homepass_moving_address_hpm_kpi (
-                  hpm_pic_name, day, create_verify_date, total_tickets, completed_tickets, total_completion_time
-              )
-              SELECT 
-                  $1, $2, $3::date, 
-                  1, -- Selalu set 1 untuk record baru
-                  CASE WHEN $5 = 'Done' THEN 1 ELSE 0 END,
-                  CASE WHEN $5 = 'Done' THEN $8 ELSE '00:00:00' END
-              WHERE NOT EXISTS (SELECT 1 FROM upsert)
+              INSERT INTO homepass_moving_address_hpm_kpi 
+              (hpm_pic_name, day, create_verify_date, total_tickets, completed_tickets, total_completion_time)
+              VALUES ($1, $2, $3, 1, $4, $5)
+              ON CONFLICT (hpm_pic_name, create_verify_date) DO UPDATE SET
+                  total_tickets = 
+                      CASE 
+                          WHEN homepass_moving_address_hpm_kpi.total_tickets = 0 THEN 1
+                          ELSE homepass_moving_address_hpm_kpi.total_tickets
+                      END,
+                  completed_tickets = 
+                      CASE 
+                          WHEN $6 = 'Done' AND homepass_moving_address_hpm_kpi.completed_tickets < homepass_moving_address_hpm_kpi.total_tickets THEN homepass_moving_address_hpm_kpi.completed_tickets + 1
+                          WHEN $6 != 'Done' AND $7 = 'Done' THEN GREATEST(homepass_moving_address_hpm_kpi.completed_tickets - 1, 0)
+                          ELSE homepass_moving_address_hpm_kpi.completed_tickets
+                      END,
+                  total_completion_time = 
+                      CASE 
+                          WHEN $6 = 'Done' AND $7 != 'Done' THEN 
+                              (homepass_moving_address_hpm_kpi.total_completion_time::interval + $8::interval)::varchar
+                          WHEN $6 != 'Done' AND $7 = 'Done' THEN 
+                              GREATEST((homepass_moving_address_hpm_kpi.total_completion_time::interval - $8::interval)::interval, '00:00:00'::interval)::varchar
+                          ELSE homepass_moving_address_hpm_kpi.total_completion_time
+                      END
           `;
   
           await poolNisa.query(updateKpiQuery, [
               newHpmPic,
               moment(newResponseHpmTimestamp).format('dddd'),
               moment(newResponseHpmTimestamp).format('YYYY-MM-DD'),
-              newResponseHpmTimestamp,
+              status === 'Done' ? 1 : 0,
+              status === 'Done' ? completionTime : '00:00:00',
               status,
-              newCompletionDate,
               existingRecord.status,
               completionTime
           ]);
@@ -814,7 +802,7 @@ class HomepassController {
                           (total_completion_time::interval / completed_tickets)::varchar
                       ELSE '00:00:00'
                   END
-              WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
+              WHERE hpm_pic_name = $1 AND create_verify_date = $2
           `;
   
           await poolNisa.query(updateAverageQuery, [
