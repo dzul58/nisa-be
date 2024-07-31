@@ -397,24 +397,24 @@ class HomepassController {
         try {
           const currentTimestamp = moment().format('YYYY-MM-DD HH:mm:ss');
           
-          // Fetch the current record to check existing values
+          // Ambil data record saat ini
           const currentRecord = await poolNisa.query(
             'SELECT hpm_pic, response_hpm_timestamp, completion_date, status FROM homepass_moving_address_request WHERE id = $1',
             [id]
           );
       
           if (currentRecord.rows.length === 0) {
-            return res.status(404).json({ error: 'Record not found' });
+            return res.status(404).json({ error: 'Record tidak ditemukan' });
           }
       
           const existingRecord = currentRecord.rows[0];
       
-          // Determine values for hpm_pic, response_hpm_timestamp, and completion_date
+          // Tentukan nilai untuk hpm_pic, response_hpm_timestamp, dan completion_date
           const newHpmPic = existingRecord.hpm_pic || name;
           const newResponseHpmTimestamp = existingRecord.response_hpm_timestamp || currentTimestamp;
           const newCompletionDate = status === 'Done' ? (existingRecord.completion_date || currentTimestamp) : null;
       
-          // Update the homepass_moving_address_request table
+          // Update tabel homepass_moving_address_request
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
               full_name_pic = $1, submission_from = $2, request_source = $3, customer_cid = $4,
@@ -431,20 +431,20 @@ class HomepassController {
               request_purpose, email_address, hpm_check_result, uploadResult.homepassId, 
               network, home_id_status, remarks, notes_recommendations,
               newHpmPic, status, newCompletionDate,
-              'Untaken',  // Default value for response_hpm_status
+              'Untaken',  // Nilai default untuk response_hpm_status
               newResponseHpmTimestamp,
               id
             ]
           );
       
-          // Calculate completion time
+          // Hitung waktu penyelesaian
           let completionTime = '00:00:00';
           if (newCompletionDate && newResponseHpmTimestamp) {
             const duration = moment.duration(moment(newCompletionDate).diff(moment(newResponseHpmTimestamp)));
             completionTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
           }
       
-          // Update homepass_moving_address_hpm_kpi table
+          // Update tabel homepass_moving_address_hpm_kpi
           const updateKpiQuery = `
             WITH upsert AS (
               UPDATE homepass_moving_address_hpm_kpi
@@ -462,7 +462,7 @@ class HomepassController {
                     WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 
                       (total_completion_time::interval + $8::interval)::varchar
                     WHEN $5 != 'Done' AND $7 = 'Done' THEN 
-                      GREATEST((total_completion_time::interval - $8::interval)::varchar, '00:00:00'::interval)::varchar
+                      GREATEST((total_completion_time::interval - $8::interval)::interval, '00:00:00'::interval)::varchar
                     ELSE total_completion_time
                   END
               WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
@@ -490,7 +490,7 @@ class HomepassController {
             completionTime
           ]);
       
-          // Calculate and update average_completion_time
+          // Hitung dan update average_completion_time
           const updateAverageQuery = `
             UPDATE homepass_moving_address_hpm_kpi
             SET average_completion_time = 
