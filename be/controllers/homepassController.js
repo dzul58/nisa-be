@@ -438,9 +438,10 @@ class HomepassController {
           );
       
           // Calculate completion time
-          let completionTime = null;
+          let completionTime = '00:00:00';
           if (newCompletionDate && newResponseHpmTimestamp) {
-            completionTime = moment(newCompletionDate).diff(moment(newResponseHpmTimestamp), 'seconds');
+            const duration = moment.duration(moment(newCompletionDate).diff(moment(newResponseHpmTimestamp)));
+            completionTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
           }
       
           // Update homepass_moving_address_hpm_kpi table
@@ -458,8 +459,10 @@ class HomepassController {
                   END,
                 total_completion_time = 
                   CASE 
-                    WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN total_completion_time + $8
-                    WHEN $5 != 'Done' AND $7 = 'Done' THEN GREATEST(total_completion_time - $8, 0)
+                    WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 
+                      (total_completion_time::interval + $8::interval)::varchar
+                    WHEN $5 != 'Done' AND $7 = 'Done' THEN 
+                      GREATEST((total_completion_time::interval - $8::interval)::varchar, '00:00:00'::interval)::varchar
                     ELSE total_completion_time
                   END
               WHERE hpm_pic_name = $1 AND create_verify_date = $3::date
@@ -472,7 +475,7 @@ class HomepassController {
               $1, $2, $3::date, 
               CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
               CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-              CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN $8 ELSE 0 END
+              CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN $8 ELSE '00:00:00' END
             WHERE NOT EXISTS (SELECT 1 FROM upsert)
           `;
       
@@ -492,8 +495,9 @@ class HomepassController {
             UPDATE homepass_moving_address_hpm_kpi
             SET average_completion_time = 
               CASE 
-                WHEN completed_tickets > 0 THEN total_completion_time / completed_tickets
-                ELSE 0
+                WHEN completed_tickets > 0 THEN 
+                  (total_completion_time::interval / completed_tickets)::varchar
+                ELSE '00:00:00'
               END
             WHERE hpm_pic_name = $1 AND create_verify_date = $2::date
           `;
