@@ -414,6 +414,13 @@ class HomepassController {
           const newResponseHpmTimestamp = existingRecord.response_hpm_timestamp || currentTimestamp;
           const newCompletionDate = status === 'Done' ? (existingRecord.completion_date || currentTimestamp) : null;
       
+          // Hitung waktu penyelesaian
+          let completionTime = '00:00:00';
+          if (newCompletionDate && newResponseHpmTimestamp) {
+            const duration = moment.duration(moment(newCompletionDate).diff(moment(newResponseHpmTimestamp)));
+            completionTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
+          }
+      
           // Update tabel homepass_moving_address_request
           const result = await poolNisa.query(
             `UPDATE homepass_moving_address_request SET
@@ -431,18 +438,10 @@ class HomepassController {
               request_purpose, email_address, hpm_check_result, uploadResult.homepassId, 
               network, home_id_status, remarks, notes_recommendations,
               newHpmPic, status, newCompletionDate,
-              'Untaken',  // Nilai default untuk response_hpm_status
-              newResponseHpmTimestamp,
+              'Untaken', newResponseHpmTimestamp,
               id
             ]
           );
-      
-          // Hitung waktu penyelesaian
-          let completionTime = '00:00:00';
-          if (newCompletionDate && newResponseHpmTimestamp) {
-            const duration = moment.duration(moment(newCompletionDate).diff(moment(newResponseHpmTimestamp)));
-            completionTime = moment.utc(duration.asMilliseconds()).format('HH:mm:ss');
-          }
       
           // Update tabel homepass_moving_address_hpm_kpi
           const updateKpiQuery = `
