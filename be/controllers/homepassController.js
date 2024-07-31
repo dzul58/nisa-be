@@ -762,16 +762,16 @@ class HomepassController {
                   UPDATE homepass_moving_address_hpm_kpi
                   SET 
                       total_tickets = total_tickets + 
-                          CASE WHEN $4::timestamp IS NOT NULL AND $7::timestamp IS NULL THEN 1 ELSE 0 END,
+                          CASE WHEN $4 IS NOT NULL AND $7 IS NULL THEN 1 ELSE 0 END,
                       completed_tickets = completed_tickets + 
                           CASE 
-                              WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL AND ($7 IS NULL OR $7 != 'Done') THEN 1
+                              WHEN $5 = 'Done' AND $6 IS NOT NULL AND ($7 IS NULL OR $7 != 'Done') THEN 1
                               WHEN $5 != 'Done' AND $7 = 'Done' THEN -1
                               ELSE 0 
                           END,
                       total_completion_time = 
                           CASE 
-                              WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 
+                              WHEN $5 = 'Done' AND $6 IS NOT NULL THEN 
                                   (total_completion_time::interval + $8::interval)::varchar
                               WHEN $5 != 'Done' AND $7 = 'Done' THEN 
                                   GREATEST((total_completion_time::interval - $8::interval)::interval, '00:00:00'::interval)::varchar
@@ -785,9 +785,9 @@ class HomepassController {
               )
               SELECT 
                   $1, $2, $3::date, 
-                  CASE WHEN $4::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-                  CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN 1 ELSE 0 END,
-                  CASE WHEN $5 = 'Done' AND $6::timestamp IS NOT NULL THEN $8 ELSE '00:00:00' END
+                  CASE WHEN $4 IS NOT NULL THEN 1 ELSE 0 END,
+                  CASE WHEN $5 = 'Done' AND $6 IS NOT NULL THEN 1 ELSE 0 END,
+                  CASE WHEN $5 = 'Done' AND $6 IS NOT NULL THEN $8 ELSE '00:00:00' END
               WHERE NOT EXISTS (SELECT 1 FROM upsert)
           `;
   
@@ -859,9 +859,6 @@ class HomepassController {
       }
   }
   
-  
-    
-    
     
 
 
