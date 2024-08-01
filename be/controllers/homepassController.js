@@ -928,25 +928,45 @@ class HomepassController {
         }
       }
 
+      // static async searchAreas(req, res) {
+      //   try {
+      //     const { query } = req.query;
+      //     const searchQuery = `
+      //       SELECT DISTINCT msar_area_name AS area
+      //       FROM msts_area 
+      //       WHERE msar_area_name ILIKE $1
+      //       ORDER BY msar_area_name
+      //       LIMIT 10
+      //     `;
+      //     const result = await poolNisa.query(searchQuery, [`%${query}%`]);
+          
+      //     const areas = result.rows
+      //       .map(row => row.area)
+      //       .filter(area => area !== null && area !== '');
+          
+      //     res.status(200).json(areas);
+      //   } catch (error) {
+      //     console.error('Error searching areas:', error);
+      //     res.status(500).json({ error: 'Internal Server Error' });
+      //   }
+      // }
+
       static async searchAreas(req, res) {
         try {
-          const { query } = req.query;
-          const searchQuery = `
+          const query = `
             SELECT DISTINCT msar_area_name AS area
             FROM msts_area 
-            WHERE msar_area_name ILIKE $1
+            WHERE msar_area_name IS NOT NULL AND msar_area_name != ''
             ORDER BY msar_area_name
-            LIMIT 10
           `;
-          const result = await poolNisa.query(searchQuery, [`%${query}%`]);
           
-          const areas = result.rows
-            .map(row => row.area)
-            .filter(area => area !== null && area !== '');
+          const result = await poolNisa.query(query);
+          
+          const areas = result.rows.map(row => row.area);
           
           res.status(200).json(areas);
         } catch (error) {
-          console.error('Error searching areas:', error);
+          console.error('Error fetching areas:', error);
           res.status(500).json({ error: 'Internal Server Error' });
         }
       }
