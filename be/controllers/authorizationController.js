@@ -1,4 +1,5 @@
 const poolNisa = require('../config/configNisa');
+const moment = require('moment');
 
 class AuthorizationController{
     static async authorizationCs(req, res, next) {
@@ -164,7 +165,7 @@ WHERE
         try {
           const { name } = req.userAccount;
           const { id } = req.params;
-          const currentTimestamp = new Date().toISOString();
+          const currentTimestamp = currentDate.format('YYYY-MM-DD HH:mm:ss');
       
           // Mulai transaksi
           await poolNisa.query('BEGIN');
