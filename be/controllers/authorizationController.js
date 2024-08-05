@@ -164,6 +164,7 @@ WHERE
         try {
           const { name } = req.userAccount;
           const { id } = req.params;
+          const currentTimestamp = new Date().toISOString();
       
           // Mulai transaksi
           await poolNisa.query('BEGIN');
@@ -186,11 +187,11 @@ WHERE
       
           // Menambahkan entri ke tabel history
           const historyQuery = `
-            INSERT INTO homepass_moving_address_update_history (homepass_moving_id, action, performed_by)
-            VALUES ($1, $2, $3)
+            INSERT INTO homepass_moving_address_update_history (homepass_moving_id, action, performed_by, performed_at)
+            VALUES ($1, $2, $3, $4)
           `;
       
-          await poolNisa.query(historyQuery, [id, 'Update status to Taken', name]);
+          await poolNisa.query(historyQuery, [id, 'Update status to Taken', name, currentTimestamp]);
       
           // Commit transaksi
           await poolNisa.query('COMMIT');
