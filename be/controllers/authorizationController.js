@@ -165,6 +165,7 @@ WHERE
         try {
           const { name } = req.userAccount;
           const { id } = req.params;
+          const currentDate = moment();
           const currentTimestamp = currentDate.format('YYYY-MM-DD HH:mm:ss');
       
           // Mulai transaksi
