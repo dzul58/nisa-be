@@ -42,10 +42,13 @@ const authentication = async (req, res, next) => {
       throw new Error('User not found');
     }
 
-    const formatName = user.muse_code
-      .split('.')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    let formatName = user.muse_name;
+    if (formatName.includes('.')) {
+      formatName = formatName
+        .split('.')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
 
     req.userAccount = {
       email: user.muse_email,

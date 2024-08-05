@@ -134,6 +134,7 @@ WHERE
 
       static async updateTakenAccess(req, res, next) {
         try {
+          const { name } = req.userAccount;
           const { id } = req.params;
     
           const query = `
