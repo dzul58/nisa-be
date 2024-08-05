@@ -19,7 +19,7 @@ class HomepassController {
         status,
         hpm_check_result,
         page = 1,
-        limit = 22
+        limit = 12
       } = req.query;
 
       const filters = [];
