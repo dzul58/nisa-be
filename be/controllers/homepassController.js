@@ -970,6 +970,33 @@ class HomepassController {
           res.status(500).json({ error: 'Internal Server Error' });
         }
       }
+
+      static async GetAllUpdateHistory(req, res) {
+        try {
+          const { search } = req.query; // Mengambil parameter pencarian dari query string
+          let query = `
+            SELECT * 
+            FROM homepass_moving_address_update_history
+          `;
+          let queryParams = [];
+      
+          // Jika ada parameter pencarian, tambahkan kondisi WHERE
+          if (search) {
+            query += ` WHERE performed_by ILIKE $1`;
+            queryParams.push(`%${search}%`);
+          }
+      
+          // Tambahkan pengurutan berdasarkan waktu terbaru
+          query += ` ORDER BY performed_at DESC`;
+      
+          const result = await poolNisa.query(query, queryParams);
+      
+          res.status(200).json(result.rows);
+        } catch (error) {
+          console.error('Error in GetAllUpdateHistory:', error);
+          res.status(500).json({ message: 'Internal server error' });
+        }
+      }
 }
 
 module.exports = HomepassController
