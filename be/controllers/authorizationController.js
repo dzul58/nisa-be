@@ -235,6 +235,32 @@ WHERE
           res.status(500).json({ message: 'Internal server error' });
         }
       }
+
+      static async UpdateTicketTaken(req, res, next) {
+        try {
+          const { id } = req.body;
+      
+          const updateQuery = `
+            UPDATE homepass_moving_address_request
+            SET response_hpm_status = 'Untaken'
+            WHERE id = $1
+            RETURNING *
+          `;
+      
+          const result = await poolNisa.query(updateQuery, [id]);
+      
+          if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Homepass request not found' });
+          }
+      
+          res.status(200).json({ 
+            message: 'Response HPM status updated to Untaken'
+          });
+        } catch (error) {
+          console.error('Error in UpdateTicketTaken:', error);
+          res.status(500).json({ message: 'Internal server error' });
+        }
+      }
 }
 
 module.exports = AuthorizationController

@@ -32,6 +32,7 @@ app.get('/api/authorization-ops', AuthorizationController.authorizationOps);
 app.get('/api/areas', HomepassController.searchAreas);
 app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
+app.put('/api/update-ticket-taken', AuthorizationController.UpdateTicketTaken);
 
 // Image upload endpoints
 app.post('/api/upload-photo-front-of-house', upload.single('photo_front_of_house'), UploadController.uploadImageFrontOfHouse);
