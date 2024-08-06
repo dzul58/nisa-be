@@ -35,8 +35,6 @@ const { Pool } = require('pg');
   //   port: 5432,
   // });
 
-  const { Pool } = require('pg');
-
 const poolNisa = new Pool({
   user: 'noc',
   host: '172.17.76.36',
