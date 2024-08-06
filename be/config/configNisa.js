@@ -11,9 +11,9 @@ const { Pool } = require('pg');
 
   const poolNisa = new Pool({
     user: 'noc',
-    host: '172.17.32.193',
+    host: '172.17.76.36',
     database: 'nisa',
-    password: 'noc123!',
+    password: 'myrep123!',
     port: 5432,
   });
 
