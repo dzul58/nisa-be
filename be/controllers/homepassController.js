@@ -94,12 +94,19 @@ class HomepassController {
       const offset = (page - 1) * limit;
 
       const query = `
-        SELECT * FROM homepass_moving_address_request 
-        ${filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""}
-        ORDER BY id DESC 
-        LIMIT $${filterValues.length + 1} 
-        OFFSET $${filterValues.length + 2}
-      `;
+      SELECT * FROM homepass_moving_address_request 
+      ${filters.length > 0 ? "WHERE " + filters.join(" AND ") : ""}
+      ORDER BY 
+        CASE 
+          WHEN status IS NULL THEN 1
+          WHEN status ILIKE 'Pending' THEN 2
+          WHEN status ILIKE 'Done' THEN 3
+          ELSE 4
+        END,
+        id DESC 
+      LIMIT $${filterValues.length + 1} 
+      OFFSET $${filterValues.length + 2}
+    `;
 
       const countQuery = `
         SELECT COUNT(*) FROM homepass_moving_address_request 
