@@ -13,7 +13,7 @@ const { Pool } = require('pg');
     user: 'noc',
     host: '172.17.76.36',
     database: 'nisa',
-    password: 'Myrep123!',
+    password: 'myrep123!',
     port: 5432,
   });
 
