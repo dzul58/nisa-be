@@ -9,23 +9,23 @@ const { Pool } = require('pg');
 //   });
 
 
-  const poolNisa = new Pool({
-    user: 'noc',
-    host: '172.17.32.193',
-    database: 'nisa',
-    password: 'noc123!',
-    port: 5432,
-  });
+  // const poolNisa = new Pool({
+  //   user: 'noc',
+  //   host: '172.17.32.193',
+  //   database: 'nisa',
+  //   password: 'noc123!',
+  //   port: 5432,
+  // });
 
 
   // NISA GCP
-  // const poolNisa = new Pool({
-  //   user: 'noc',
-  //   host: '172.17.76.36',
-  //   database: 'nisa',
-  //   password: 'myrep123!',
-  //   port: 5432,
-  // });
+  const poolNisa = new Pool({
+    user: 'noc',
+    host: '172.17.76.36',
+    database: 'nisa',
+    password: 'myrep123!',
+    port: 5432,
+  });
 
   // const pool = new Pool({
   //   user: 'postgres',
