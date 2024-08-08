@@ -4,7 +4,7 @@ const poolNisa = require('../config/configNisa')
 class KpiController {
   static async getAllCsKpi(req, res) {
     try {
-      const { name, period, sortBy, sortOrder, page = 1, limit = 10 } = req.query;
+      const { name, period, sortBy, sortOrder, page = 1, limit = 25 } = req.query;
       const offset = (page - 1) * limit;
 
       let query = `
@@ -63,7 +63,7 @@ class KpiController {
 
   static async getAllHpmKpi(req, res) {
     try {
-      const { name, period, sortBy, sortOrder, page = 1, limit = 10 } = req.query;
+      const { name, period, sortBy, sortOrder, page = 1, limit = 25 } = req.query;
       const offset = (page - 1) * limit;
 
       let query = `
