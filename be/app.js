@@ -34,6 +34,7 @@ app.get('/api/areas', HomepassController.searchAreas);
 app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.get('/api/update-history', HomepassController.GetAllUpdateHistory);
 app.get('/api/cs-kpi', authentication, KpiController.getAllCsKpi);
+app.get('/api/hpm-kpi', authentication, KpiController.getAllHpmKpi);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
 app.put('/api/update-ticket-taken', AuthorizationController.UpdateTicketTaken);
 
