@@ -9,6 +9,7 @@ const path = require('path');
 const authentication = require('./middlewares/authentication');
 const LoginController = require('./controllers/loginController');
 const AuthorizationController = require('./controllers/authorizationController');
+const KpiController = require('./controllers/kpiController');
 
 app.use(cors({
   origin: ['https://moving-address.oss.myrepublic.co.id', 'http://localhost:5173'],
@@ -32,6 +33,7 @@ app.get('/api/authorization-ops', AuthorizationController.authorizationOps);
 app.get('/api/areas', HomepassController.searchAreas);
 app.get('/api/homepass', HomepassController.getAllHomepassRequests);
 app.get('/api/update-history', HomepassController.GetAllUpdateHistory);
+app.get('/api/cs-kpi', authentication, KpiController.getAllCsKpi);
 app.post('/api/homepass', HomepassController.createHomepassRequest);
 app.put('/api/update-ticket-taken', AuthorizationController.UpdateTicketTaken);
 
